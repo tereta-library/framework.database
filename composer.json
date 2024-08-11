@@ -1,5 +1,9 @@
 {
     "name": "tereta/framework.database",
+    "description": "Part of framework to process DB requests",
+    "license": "Apache-2.0",
+    "version": "0.0.19",
+    "type": "library",
     "autoload": {
         "psr-4": {
             "Framework\\Database\\": "src/"
