@@ -39,6 +39,11 @@ class Builder
     const TYPE_SMALLINT_UNSIGNED = 255 + 1;
     const TYPE_TINYINT_UNSIGNED = 0;
 
+    const TYPE_LONGTEXT = 4000 + 1;
+    const TYPE_MEDIUMTEXT = 2000 + 1;
+    const TYPE_TEXT = 255 + 1;
+    const TYPE_VARCHAR = 0;
+
     /**
      * @var array $columns
      */
@@ -48,6 +53,11 @@ class Builder
      * @var array $foreign
      */
     private array $foreign = [];
+
+    /**
+     * @var array $unique
+     */
+    private array $unique = [];
 
     /**
      * @param string|null $table
@@ -73,6 +83,10 @@ class Builder
      */
     public function addString(string $columnName, int $length = 255): ColumnBuilder
     {
+        if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
+            throw new \InvalidArgumentException("Column name '{$columnName}' is invalid");
+        }
+
         switch(true) {
             case($length > 4000):
                 $column = "{$columnName} LONGTEXT";
@@ -176,6 +190,16 @@ class Builder
     }
 
     /**
+     * @param ...$columns
+     * @return $this
+     */
+    public function addUnique(...$columns): static
+    {
+        $this->unique[] = $columns;
+        return $this;
+    }
+
+    /**
      * @return string $this
      */
     public function build(): string
@@ -187,6 +211,10 @@ class Builder
 
         foreach($this->foreign as $foreign) {
             $columns[] = $foreign->build();
+        }
+
+        foreach ($this->unique as $unique) {
+            $columns[] = "UNIQUE KEY unique_" . implode("_", $unique) . " (" . implode(", ", $unique) . ")";
         }
 
         $string = "CREATE TABLE {$this->table} (\n  " . implode(",\n  ", $columns) . "\n)";

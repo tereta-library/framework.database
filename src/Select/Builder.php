@@ -76,6 +76,15 @@ class Builder
         return $this;
     }
 
+    private array $innerJoin = [];
+
+    public function innerJoin(string $table, string $condition): static
+    {
+        $this->innerJoin[$table] = $condition;
+
+        return $this;
+    }
+
     /**
      * @param string $condition
      * @param ...$variables
@@ -113,6 +122,10 @@ class Builder
     public function build(): string
     {
         $sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ' . $this->table;
+
+        foreach ($this->innerJoin as $table => $condition) {
+            $sql .= " INNER JOIN {$table} ON {$condition}";
+        }
 
         $sql .= $this->buildWhere();
 
