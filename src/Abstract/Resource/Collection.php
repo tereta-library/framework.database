@@ -67,6 +67,18 @@ abstract class Collection implements Iterator
     }
 
     /**
+     * @param string $value
+     * @param string $key
+     * @return static
+     */
+    public function load(string|int|null|bool $value, string $key): static
+    {
+        $this->getSelect()->where("{$key} = ?", $value);
+        $this->loadCollection(true);
+        return $this;
+    }
+
+    /**
      * @param bool $reset
      * @return SelectBuilder
      */
@@ -83,14 +95,14 @@ abstract class Collection implements Iterator
      * @param bool $reset
      * @return PDOStatement
      */
-    private function load(bool $reset = false): PDOStatement
+    private function loadCollection(bool $reset = false): PDOStatement
     {
         if ($this->loadStatement && !$reset) {
             return $this->loadStatement;
         }
         $this->position = 0;
         $query = $this->getSelect();
-        $pdoState = $this->connection->query($query->build());
+        $pdoState = $this->connection->prepare($query->build());
         $pdoState->execute($query->getParams());
 
         $this->count = $pdoState->rowCount();
@@ -102,7 +114,7 @@ abstract class Collection implements Iterator
      * @return void
      */
     public function rewind(): void {
-        $this->load(true);
+        $this->loadCollection(true);
     }
 
     /**
@@ -132,7 +144,7 @@ abstract class Collection implements Iterator
      * @return bool
      */
     public function valid(): bool {
-        $this->load();
+        $this->loadCollection();
 
         return $this->position < $this->count;
     }
