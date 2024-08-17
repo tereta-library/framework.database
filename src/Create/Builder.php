@@ -27,22 +27,22 @@ use PDO;
 class Builder
 {
 
-    const TYPE_BIGINT = 2147483647 + 1;
-    const TYPE_INT = 8388607 + 1;
-    const TYPE_MEDIUMINT = 32767 + 1;
-    const TYPE_SMALLINT = 127 + 1;
-    const TYPE_TINYINT = 0;
+    const TYPE_BIGINT = 9223372036854776000 - 1;
+    const TYPE_INT = 2147483647;
+    const TYPE_MEDIUMINT = 8388607;
+    const TYPE_SMALLINT = 32767;
+    const TYPE_TINYINT = 127;
 
-    const TYPE_BIGINT_UNSIGNED = 4294967295 + 1;
-    const TYPE_INT_UNSIGNED = 16777215 + 1;
-    const TYPE_MEDIUMINT_UNSIGNED = 65535 + 1;
-    const TYPE_SMALLINT_UNSIGNED = 255 + 1;
-    const TYPE_TINYINT_UNSIGNED = 0;
+    const TYPE_BIGINT_UNSIGNED = 18446744073709552000 - 1;
+    const TYPE_INT_UNSIGNED = 4294967295;
+    const TYPE_MEDIUMINT_UNSIGNED = 16777215;
+    const TYPE_SMALLINT_UNSIGNED = 65535;
+    const TYPE_TINYINT_UNSIGNED = 255;
 
-    const TYPE_LONGTEXT = 4000 + 1;
-    const TYPE_MEDIUMTEXT = 2000 + 1;
-    const TYPE_TEXT = 255 + 1;
-    const TYPE_VARCHAR = 0;
+    const TYPE_LONGTEXT = 4294967295;
+    const TYPE_MEDIUMTEXT = 16777215;
+    const TYPE_TEXT = 65535;
+    const TYPE_VARCHAR = 255;
 
     /**
      * @var array $columns
@@ -52,7 +52,7 @@ class Builder
     /**
      * @var array $foreign
      */
-    private array $foreign = [];
+    private array $foreigns = [];
 
     /**
      * @var array $unique
@@ -88,17 +88,20 @@ class Builder
         }
 
         switch(true) {
-            case($length > 4000):
-                $column = "{$columnName} LONGTEXT";
+            case($length <= self::TYPE_VARCHAR):
+                $column = "{$columnName} VARCHAR({$length})";
                 break;
-            case($length > 2000):
-                $column = "{$columnName} MEDIUMTEXT";
-                break;
-            case($length > 255):
+            case($length <= self::TYPE_TEXT):
                 $column = "{$columnName} TEXT";
                 break;
+                case($length <= self::TYPE_MEDIUMTEXT):
+                $column = "{$columnName} MEDIUMTEXT";
+                break;
+            case($length <= self::TYPE_LONGTEXT):
+                $column = "{$columnName} LONGTEXT";
+                break;
             default:
-                $column = "{$columnName} VARCHAR({$length})";
+                throw new Exception("Invalid length {$length} of string type");
                 break;
         }
 
@@ -139,42 +142,56 @@ class Builder
      * @param bool $signed
      * @return ColumnBuilder
      */
-    public function addInteger(string $columnName, int $length = 4294967295, bool $signed = false): ColumnBuilder
+    public function addInteger(string $columnName, int $length = self::TYPE_INT_UNSIGNED, bool $signed = false): ColumnBuilder
     {
         switch(true) {
-            case($signed == true && $length > 2147483647):
-                $column = "{$columnName} BIGINT";
-                break;
-            case($signed == true && $length > 8388607):
-                $column = "{$columnName} INT";
-                break;
-            case($signed == true && $length > 32767):
-                $column = "{$columnName} MEDIUMINT";
-                break;
-            case($signed == true && $length > 127):
-                $column = "{$columnName} SMALLINT";
-                break;
-            case($signed == true):
+            case($signed == true && $length <= static::TYPE_TINYINT):
                 $column = "{$columnName} TINYINT";
                 break;
-            case($length > 4294967295):
-                $column = "{$columnName} BIGINT UNSIGNED";
+            case($signed == true && $length <= static::TYPE_SMALLINT):
+                $column = "{$columnName} SMALLINT";
                 break;
-            case($length > 16777215):
-                $column = "{$columnName} INT UNSIGNED";
+            case($signed == true && $length <= static::TYPE_MEDIUMINT):
+                $column = "{$columnName} MEDIUMINT";
                 break;
-            case($length > 65535):
-                $column = "{$columnName} MEDIUMINT UNSIGNED";
+            case($signed == true && $length <= static::TYPE_INT):
+                $column = "{$columnName} INT";
                 break;
-            case($length > 255):
+            case($signed == true && $length <= static::TYPE_BIGINT):
+                $column = "{$columnName} BIGINT";
+                break;
+            case($signed == true):
+                throw new Exception("Invalid length {$length} of numeric type");
+                break;
+            case($length <= static::TYPE_TINYINT_UNSIGNED):
+                $column = "{$columnName} TINYINT UNSIGNED";
+                break;
+            case($length <= static::TYPE_SMALLINT_UNSIGNED):
                 $column = "{$columnName} SMALLINT UNSIGNED";
                 break;
+            case($length <= static::TYPE_MEDIUMINT_UNSIGNED):
+                $column = "{$columnName} MEDIUMINT UNSIGNED";
+                break;
+            case($length <= static::TYPE_INT_UNSIGNED):
+                $column = "{$columnName} INT UNSIGNED";
+                break;
+            case($length <= static::TYPE_BIGINT_UNSIGNED):
+                $column = "{$columnName} BIGINT UNSIGNED";
+                break;
             default:
-                $column = "{$columnName} TINYINT UNSIGNED";
+                throw new Exception("Invalid length {$length} of numeric type");
                 break;
         }
 
         $column = new ColumnBuilder($column, ColumnBuilder::TYPE_INT);
+        $this->columns[] = $column;
+        return $column;
+    }
+
+    public function addBoolean(string $columnName): ColumnBuilder
+    {
+        $column = "{$columnName} BOOLEAN";
+        $column = new ColumnBuilder($column, ColumnBuilder::TYPE_BOOLEAN);
         $this->columns[] = $column;
         return $column;
     }
@@ -186,7 +203,7 @@ class Builder
      */
     public function addForeign(PDO $connection, string $string): ForeignBuilder
     {
-        return $this->foreign[] = new ForeignBuilder($connection, $this, $string);
+        return $this->foreigns[] = new ForeignBuilder($connection, $this, $string);
     }
 
     /**
@@ -204,14 +221,17 @@ class Builder
      */
     public function build(): string
     {
+        $foreigns = [];
+        foreach($this->foreigns as $foreign) {
+            $foreigns[] = $foreign->build();
+        }
+
         $columns = [];
         foreach ($this->columns as $column) {
             $columns[] = $column->build();
         }
 
-        foreach($this->foreign as $foreign) {
-            $columns[] = $foreign->build();
-        }
+        $columns = array_merge($columns, $foreigns);
 
         foreach ($this->unique as $unique) {
             $columns[] = "UNIQUE KEY unique_" . implode("_", $unique) . " (" . implode(", ", $unique) . ")";

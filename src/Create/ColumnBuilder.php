@@ -30,6 +30,37 @@ class ColumnBuilder
     const TYPE_DECIMAL = 2;
     const TYPE_TEXT = 3;
     const TYPE_DATETIME = 4;
+    const TYPE_BOOLEAN = 5;
+
+    /**
+     * @var string
+     */
+    private string $partDefault = '';
+
+    /**
+     * @var string
+     */
+    private string $partNotNull = '';
+
+    /**
+     * @var string
+     */
+    private string $partComment = '';
+
+    /**
+     * @var string
+     */
+    private string $partPrimaryKey = '';
+
+    /**
+     * @var string
+     */
+    private string $partAutoIncrement = '';
+
+    /**
+     * @var string
+     */
+    private string $partUnique = '';
 
     /**
      * @param string $field
@@ -44,7 +75,13 @@ class ColumnBuilder
      */
     public function build(): string
     {
-        return $this->field;
+        return $this->field .
+            ($this->partNotNull ? ' ' . $this->partNotNull : '') .
+            ($this->partPrimaryKey ? ' ' . $this->partPrimaryKey : '') .
+            ($this->partDefault ? ' ' . $this->partDefault : '') .
+            ($this->partAutoIncrement ? ' ' . $this->partAutoIncrement : '') .
+            ($this->partUnique ? ' ' . $this->partUnique : '') .
+            ($this->partComment ? ' ' . $this->partComment : '');
     }
 
     /**
@@ -56,7 +93,7 @@ class ColumnBuilder
             throw new InvalidArgumentException('Auto increment can only be set on integer fields');
         }
 
-        $this->field .= ' AUTO_INCREMENT';
+        $this->partAutoIncrement = 'AUTO_INCREMENT';
         return $this;
     }
 
@@ -65,7 +102,7 @@ class ColumnBuilder
      */
     public function setNotNull(): static
     {
-        $this->field .= ' NOT NULL';
+        $this->partNotNull = 'NOT NULL';
         return $this;
     }
 
@@ -74,7 +111,7 @@ class ColumnBuilder
      */
     public function setPrimaryKey(): static
     {
-        $this->field .= ' PRIMARY KEY';
+        $this->partPrimaryKey = 'PRIMARY KEY';
         return $this;
     }
 
@@ -83,7 +120,7 @@ class ColumnBuilder
      */
     public function setUnique(): static
     {
-        $this->field .= ' UNIQUE';
+        $this->partUnique = 'UNIQUE';
         return $this;
     }
 
@@ -91,14 +128,24 @@ class ColumnBuilder
      * @param $value
      * @return $this
      */
-    public function setDefault($value): static
+    public function setDefault(Value|null|int|string|bool $value): static
     {
         if ($value instanceof Value) {
-            $this->field .= " DEFAULT {$value->build()}";
+            $this->partDefault = "DEFAULT {$value->build()}";
             return $this;
         }
 
-        $this->field .= " DEFAULT '{$value}'";
+        if (is_bool($value) || is_int($value)) {
+            $this->partDefault = "DEFAULT {$value}";
+            return $this;
+        }
+
+        if (is_null($value)) {
+            $this->partDefault = "DEFAULT NULL";
+            return $this;
+        }
+
+        $this->partDefault = "DEFAULT '{$value}'";
         return $this;
     }
 
@@ -108,7 +155,7 @@ class ColumnBuilder
      */
     public function setComment(string $comment): static
     {
-        $this->field .= " COMMENT '{$comment}'";
+        $this->partComment = "COMMENT '{$comment}'";
         return $this;
     }
 

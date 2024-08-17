@@ -37,6 +37,11 @@ class ForeignBuilder
      */
     private string $foreignColumn;
 
+    /**
+     * @var string $comment
+     */
+    private string $comment = '';
+
 
     /**
      * @param PDO $connection
@@ -46,6 +51,18 @@ class ForeignBuilder
     public function __construct(private PDO $connection, private Builder $parent, private string $column)
     {
     }
+
+    /**
+     * @param string $comment
+     * @return $this
+     */
+    public function setComment(string $comment): static
+    {
+        $this->comment = $comment;
+        return $this;
+    }
+
+    private $fieldType = null;
 
     /**
      * @param string $table
@@ -100,6 +117,7 @@ class ForeignBuilder
                 throw new Exception('Unsupported foreign key type');
         }
 
+        $this->fieldType = $type;
         $this->foreignTable = $table;
         $this->foreignColumn = $column;
         return $this;
@@ -110,6 +128,10 @@ class ForeignBuilder
      */
     public function build(): string
     {
+        if ($this->comment) {
+            $this->fieldType->setComment($this->comment);
+        }
+
         return "FOREIGN KEY ({$this->column}) REFERENCES {$this->foreignTable}({$this->foreignColumn}) ON DELETE CASCADE ON UPDATE CASCADE";
     }
 }
