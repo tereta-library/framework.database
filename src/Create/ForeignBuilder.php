@@ -50,6 +50,9 @@ class ForeignBuilder
      */
     public function __construct(private PDO $connection, private Builder $parent, private string $column)
     {
+        if (preg_match('/[^a-zA-Z0-9_]/', $column)) {
+            throw new \InvalidArgumentException("Column name {$column} is invalid");
+        }
     }
 
     /**
@@ -72,9 +75,23 @@ class ForeignBuilder
      */
     public function foreign(string $table, string $column): static
     {
-        $foreignTable = Facade::describeTable($this->connection, $table);
+        if (preg_match('/[^a-zA-Z0-9_]/', $table)) {
+            throw new \InvalidArgumentException("Table name {$table} is invalid");
+        }
+
+        if (preg_match('/[^a-zA-Z0-9_]/', $column)) {
+            throw new \InvalidArgumentException("Column name {$column} is invalid");
+        }
 
         $foreignColumnType = null;
+
+        if ($this->parent->getTable() != $table) {
+            $foreignTable = Facade::describeTable($this->connection, $table);
+        } else {
+            $foreignTable = [];
+            $foreignColumnType = $this->parent->getColumn($column)->getFieldType();
+        }
+
         foreach ($foreignTable as $row) {
             if ($row['Field'] === $column) {
                 $foreignColumnType = $row['Type'];

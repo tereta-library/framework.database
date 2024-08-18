@@ -4,6 +4,7 @@ namespace Framework\Database\Create;
 
 use Framework\Database\Create\ColumnBuilder as ColumnBuilder;
 use PDO;
+use InvalidArgumentException;
 
 /**
  * ···························WWW.TERETA.DEV······························
@@ -60,6 +61,11 @@ class Builder
     private array $unique = [];
 
     /**
+     * @var array $index
+     */
+    private array $index = [];
+
+    /**
      * @param string|null $table
      */
     public function __construct(private ?string $table = null)
@@ -72,8 +78,20 @@ class Builder
      */
     public function setTable(string $table): static
     {
+        if (preg_match('/[^a-zA-Z0-9_]/', $table)) {
+            throw new InvalidArgumentException("Column name \"{$table}\" is invalid");
+        }
+
         $this->table = $table;
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTable(): string
+    {
+        return $this->table;
     }
 
     /**
@@ -84,28 +102,28 @@ class Builder
     public function addString(string $columnName, int $length = 255): ColumnBuilder
     {
         if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
-            throw new \InvalidArgumentException("Column name '{$columnName}' is invalid");
+            throw new InvalidArgumentException("Column name '{$columnName}' is invalid");
         }
 
         switch(true) {
             case($length <= self::TYPE_VARCHAR):
-                $column = "{$columnName} VARCHAR({$length})";
+                $columnType = "varchar({$length})";
                 break;
             case($length <= self::TYPE_TEXT):
-                $column = "{$columnName} TEXT";
+                $columnType = "text";
                 break;
-                case($length <= self::TYPE_MEDIUMTEXT):
-                $column = "{$columnName} MEDIUMTEXT";
+            case($length <= self::TYPE_MEDIUMTEXT):
+                $columnType = "mediumtext";
                 break;
             case($length <= self::TYPE_LONGTEXT):
-                $column = "{$columnName} LONGTEXT";
+                $columnType = "longtext";
                 break;
             default:
                 throw new Exception("Invalid length {$length} of string type");
                 break;
         }
 
-        $column = new ColumnBuilder($column, ColumnBuilder::TYPE_TEXT);
+        $column = new ColumnBuilder($columnName, $columnType, ColumnBuilder::TYPE_TEXT);
         $this->columns[] = $column;
         return $column;
     }
@@ -116,8 +134,11 @@ class Builder
      */
     public function addDateTime(string $columnName): ColumnBuilder
     {
-        $column = "{$columnName} DATETIME";
-        $column = new ColumnBuilder($column, ColumnBuilder::TYPE_DATETIME);
+        if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
+            throw new InvalidArgumentException("Column name \"{$columnName}\" is invalid");
+        }
+
+        $column = new ColumnBuilder($columnName, "datetime", ColumnBuilder::TYPE_DATETIME);
         $this->columns[] = $column;
         return $column;
     }
@@ -130,8 +151,11 @@ class Builder
      */
     public function addDecimal(string $columnName, int $length = 10, int $decimals = 2): ColumnBuilder
     {
-        $column = "{$columnName} DECIMAL({$length}, {$decimals})";
-        $column = new ColumnBuilder($column, ColumnBuilder::TYPE_DECIMAL);
+        if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
+            throw new InvalidArgumentException("Column name \"{$columnName}\" is invalid");
+        }
+
+        $column = new ColumnBuilder($column, "decimal({$length}, {$decimals})", ColumnBuilder::TYPE_DECIMAL);
         $this->columns[] = $column;
         return $column;
     }
@@ -144,54 +168,77 @@ class Builder
      */
     public function addInteger(string $columnName, int $length = self::TYPE_INT_UNSIGNED, bool $signed = false): ColumnBuilder
     {
+        if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
+            throw new InvalidArgumentException("Column name \"{$columnName}\" is invalid");
+        }
+
         switch(true) {
             case($signed == true && $length <= static::TYPE_TINYINT):
-                $column = "{$columnName} TINYINT";
+                $columnType = 'tinyint';
                 break;
             case($signed == true && $length <= static::TYPE_SMALLINT):
-                $column = "{$columnName} SMALLINT";
+                $columnType = 'smallint';
                 break;
             case($signed == true && $length <= static::TYPE_MEDIUMINT):
-                $column = "{$columnName} MEDIUMINT";
+                $columnType = 'mediumint';
                 break;
             case($signed == true && $length <= static::TYPE_INT):
-                $column = "{$columnName} INT";
+                $columnType = 'int';
                 break;
             case($signed == true && $length <= static::TYPE_BIGINT):
-                $column = "{$columnName} BIGINT";
+                $columnType = 'bigint';
                 break;
             case($signed == true):
                 throw new Exception("Invalid length {$length} of numeric type");
                 break;
             case($length <= static::TYPE_TINYINT_UNSIGNED):
-                $column = "{$columnName} TINYINT UNSIGNED";
+                $columnType = 'tinyint unsigned';
                 break;
             case($length <= static::TYPE_SMALLINT_UNSIGNED):
-                $column = "{$columnName} SMALLINT UNSIGNED";
+                $columnType = 'smallint unsigned';
                 break;
             case($length <= static::TYPE_MEDIUMINT_UNSIGNED):
-                $column = "{$columnName} MEDIUMINT UNSIGNED";
+                $columnType = 'mediumint unsigned';
                 break;
             case($length <= static::TYPE_INT_UNSIGNED):
-                $column = "{$columnName} INT UNSIGNED";
+                $columnType = 'int unsigned';
                 break;
             case($length <= static::TYPE_BIGINT_UNSIGNED):
-                $column = "{$columnName} BIGINT UNSIGNED";
+                $columnType = 'bigint unsigned';
                 break;
             default:
                 throw new Exception("Invalid length {$length} of numeric type");
                 break;
         }
 
-        $column = new ColumnBuilder($column, ColumnBuilder::TYPE_INT);
+        $column = new ColumnBuilder($columnName, $columnType, ColumnBuilder::TYPE_INT);
         $this->columns[] = $column;
         return $column;
     }
 
+    /**
+     * @param string $columnName
+     * @return ColumnBuilder
+     */
+    public function getColumn(string $columnName): ColumnBuilder
+    {
+        foreach ($this->columns as $column) {
+            if ($column->getFieldName() == $columnName) {
+                return $column;
+            }
+        }
+
+        throw new InvalidArgumentException("Column \"{$columnName}\" not found");
+    }
+
+    /**
+     * @param string $columnName
+     * @return ColumnBuilder
+     */
     public function addBoolean(string $columnName): ColumnBuilder
     {
-        $column = "{$columnName} BOOLEAN";
-        $column = new ColumnBuilder($column, ColumnBuilder::TYPE_BOOLEAN);
+        $columnType = "BOOLEAN";
+        $column = new ColumnBuilder($columnName, $columnType, ColumnBuilder::TYPE_BOOLEAN);
         $this->columns[] = $column;
         return $column;
     }
@@ -201,9 +248,9 @@ class Builder
      * @param string $string
      * @return ForeignBuilder
      */
-    public function addForeign(PDO $connection, string $string): ForeignBuilder
+    public function addForeign(PDO $connection, string $column): ForeignBuilder
     {
-        return $this->foreigns[] = new ForeignBuilder($connection, $this, $string);
+        return $this->foreigns[] = new ForeignBuilder($connection, $this, $column);
     }
 
     /**
@@ -212,7 +259,25 @@ class Builder
      */
     public function addUnique(...$columns): static
     {
+        if (preg_match('/[^a-zA-Z0-9_]/', implode($columns))) {
+            throw new InvalidArgumentException("Column names \"" . implode("\", \"", $columns) . "\" is invalid");
+        }
+
         $this->unique[] = $columns;
+        return $this;
+    }
+
+    /**
+     * @param ...$columns
+     * @return $this
+     */
+    public function addIndex(string $column): static
+    {
+        if (preg_match('/[^a-zA-Z0-9_]/', $column)) {
+            throw new InvalidArgumentException("Column name '{$column}' is invalid");
+        }
+
+        $this->index[] = $column;
         return $this;
     }
 
@@ -235,6 +300,10 @@ class Builder
 
         foreach ($this->unique as $unique) {
             $columns[] = "UNIQUE KEY unique_" . implode("_", $unique) . " (" . implode(", ", $unique) . ")";
+        }
+
+        foreach ($this->index as $index) {
+            $columns[] = "INDEX index_{$index} ({$index})";
         }
 
         $string = "CREATE TABLE {$this->table} (\n  " . implode(",\n  ", $columns) . "\n)";

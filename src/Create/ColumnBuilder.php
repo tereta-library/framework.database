@@ -64,10 +64,27 @@ class ColumnBuilder
 
     /**
      * @param string $field
+     * @param string $columnType
      * @param int $type
      */
-    public function __construct(private string $field, private int $type)
+    public function __construct(private string $field, private string $columnType, private int $type)
     {
+    }
+
+    /**
+     * @return string
+     */
+    public function getFieldName(): string
+    {
+        return $this->field;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFieldType(): string
+    {
+        return $this->columnType;
     }
 
     /**
@@ -75,7 +92,7 @@ class ColumnBuilder
      */
     public function build(): string
     {
-        return $this->field .
+        return $this->field . ' ' . $this->columnType .
             ($this->partNotNull ? ' ' . $this->partNotNull : '') .
             ($this->partPrimaryKey ? ' ' . $this->partPrimaryKey : '') .
             ($this->partDefault ? ' ' . $this->partDefault : '') .
@@ -155,6 +172,8 @@ class ColumnBuilder
      */
     public function setComment(string $comment): static
     {
+        $comment = str_replace("\\", "\\\\", $comment);
+        $comment = str_replace("'", "\'", $comment);
         $this->partComment = "COMMENT '{$comment}'";
         return $this;
     }
