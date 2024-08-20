@@ -52,9 +52,12 @@ abstract class Model
     private array $uniqueFields = [];
 
     /**
-     * @param string $table
-     * @param string|null $idField
-     * @param string $connectionName
+     * The method should be extended by child classes with static table predefinition in the $table property
+     * The field ID can be set in the $idField property, but if it is not set, the model will try to find it in the table definition
+     *
+     * @param string $table - table to process by the model
+     * @param string|null $idField - it is key definition, but if it is not set, the model will try to find it in the table definition
+     * @param string $connectionName - connection name from the config
      * @throws Exception
      */
     public function __construct(private string $table, private ?string $idField = null, string $connectionName = 'default')
@@ -99,18 +102,26 @@ abstract class Model
      * @return bool
      * @throws Exception
      */
-    public function load(ItemModel $model, string|int|float|null $value = null, ?string $field = null): bool
+    public function load(ItemModel $model, string|int|float|null|array $value = null, ?string $field = null): bool
     {
         $params = func_get_args();
-        if (!$field) {
+        if (!$field && !is_array($value)) {
             $this->prepareModel();
             $field = $this->idField;
         }
         if ($value === null && count($params) < 2) $value = $model->get($field);
 
         $select = $this->getSelect();
-        if ($value && $field) {
-            $select->where($field . ' = ?', $value);
+        if (is_array($value)) {
+            $valueSearch = $value;
+        } elseif ($value && $field) {
+            $valueSearch = [$field => $value];
+        } else {
+            throw new Exception('Value and field are not set');
+        }
+
+        foreach ($valueSearch as $key => $val) {
+            $select->where($key . ' = ?', $val);
         }
 
         $pdo = SingletonDatabase::getConnection();
