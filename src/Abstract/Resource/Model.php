@@ -164,7 +164,10 @@ abstract class Model
     public function save(ItemModel $model): static
     {
         $this->prepareModel();
-        $query = Factory::createInsert($this->table)->values($model->getData());
+        $data = array_intersect_key($model->getData(), $this->description);
+
+        $this->prepareModel();
+        $query = Factory::createInsert($this->table)->values($data);
         $query->updateOnDupilicate(...$this->uniqueFields);
 
         $pdoStat = $this->connection->prepare($query->build());

@@ -50,17 +50,9 @@ abstract class Model
      * @param mixed $value
      * @return void
      */
-    public function __set(string $key, string|int|bool $value): void
+    public function __set(string $key, string|int|bool|null $value): void
     {
         $this->set($key, $value);
-    }
-
-    /**
-     * @return array
-     */
-    public function _toArray(): array
-    {
-        return $this->data;
     }
 
     /**
@@ -93,7 +85,7 @@ abstract class Model
      * @param mixed $value
      * @return $this
      */
-    public function set(string $key, string|int|bool $value): static
+    public function set(string $key, string|int|bool|null $value): static
     {
         $this->data[$key] = $value;
 
