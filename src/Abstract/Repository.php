@@ -5,7 +5,7 @@ namespace Framework\Database\Abstract;
 use Builder\Site\Model\Entity as EntityModel;
 use Exception;
 use Framework\Database\Abstract\Model;
-
+use Framework\Database\Abstract\Repository as RepositoryAbstract;
 
 /**
  * @class Framework\Database\Abstract\Repository
@@ -14,7 +14,7 @@ abstract class Repository {
     /**
      * @var \Builder\Site\Model\Repository|null $instance
      */
-    private static ?self $instance = null;
+    private static ?RepositoryAbstract $instance = null;
 
     /**
      * @var array $registered

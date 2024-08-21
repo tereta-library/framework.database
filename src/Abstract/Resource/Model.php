@@ -116,8 +116,8 @@ abstract class Model
             $valueSearch = $value;
         } elseif ($value && $field) {
             $valueSearch = [$field => $value];
-        } else {
-            throw new Exception('Value and field are not set');
+        } else  {
+            $valueSearch = [];
         }
 
         foreach ($valueSearch as $key => $val) {
