@@ -2,7 +2,7 @@
 
 namespace Framework\Database\Abstract;
 
-use Builder\Site\Model\Entity as EntityModel;
+use Builder\Site\Model\Site as EntityModel;
 use Exception;
 use Framework\Database\Abstract\Model;
 use Framework\Database\Abstract\Repository as RepositoryAbstract;
