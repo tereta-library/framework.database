@@ -48,10 +48,19 @@ abstract class Collection implements Iterator
      */
     private ResourceModel $resourceModel;
 
+    /**
+     * @var
+     */
     private $select;
 
+    /**
+     * @var null
+     */
     private $loadStatement = null;
 
+    /**
+     * @var PDO
+     */
     private PDO $connection;
 
     /**
@@ -89,6 +98,17 @@ abstract class Collection implements Iterator
         }
         $this->select = SelectFactory::create()->from($this->resourceModel->getTable());
         return $this->select;
+    }
+
+    /**
+     * @param string $condition
+     * @param ...$params
+     * @return $this
+     */
+    public function where(string $condition, ...$params): static
+    {
+        $this->getSelect()->where($condition, ...$params);
+        return $this;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace Framework\Database\Select;
 
+use Exception;
+
 /**
  * ···························WWW.TERETA.DEV······························
  * ·······································································
@@ -93,6 +95,9 @@ class Builder
     public function where(string $condition, ...$variables): static
     {
         foreach ($variables as $key => $variable) {
+            if (is_array($variable)) {
+                throw new Exception('Parameter $variable must not be an array');
+            }
             $field = $this->valueCounter ? ":field{$this->valueCounter}" : ":field";
             $this->params[$field] = $variable;
             $condition = str_replace('?', $field, $condition);
