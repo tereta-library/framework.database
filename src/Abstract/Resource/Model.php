@@ -184,10 +184,10 @@ abstract class Model
     /**
      * @param ItemModel|string|int|float|array|null $value
      * @param string|null $field
-     * @return bool
+     * @return int
      * @throws Exception
      */
-    public function delete(ItemModel|string|int|float|null|array $value = null, ?string $field = null): bool
+    public function delete(ItemModel|string|int|float|null|array $value = null, ?string $field = null): int
     {
         $params = func_get_args();
         if (!$field) {
