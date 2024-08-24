@@ -180,4 +180,45 @@ abstract class Model
 
         return $this;
     }
+
+    /**
+     * @param ItemModel|string|int|float|array|null $value
+     * @param string|null $field
+     * @return bool
+     * @throws Exception
+     */
+    public function delete(ItemModel|string|int|float|null|array $value = null, ?string $field = null): bool
+    {
+        $params = func_get_args();
+        if (!$field) {
+            $this->prepareModel();
+            $field = $this->idField;
+        }
+        if ($value instanceof ItemModel && count($params) < 1) $value = $value->get($field);
+
+        $select = $this->getSelect();
+        if (is_array($value) && $field) {
+            foreach ($value as $val) {
+                $select->where($field . ' = ?', $val);
+            }
+
+            $valueSearch = [];
+        } elseif (is_array($value)) {
+            $valueSearch = $value;
+        } elseif ($value && $field) {
+            $valueSearch = [$field => $value];
+        } else  {
+            $valueSearch = [];
+        }
+
+        foreach ($valueSearch as $key => $val) {
+            $select->where($key . ' = ?', $val);
+        }
+
+        $pdo = SingletonDatabase::getConnection();
+        $pdoStatement = $pdo->prepare($select->buildDelete());
+        $pdoStatement->execute($select->getParams());
+        $this->select = null;
+        return $pdoStatement->rowCount();
+    }
 }

@@ -140,6 +140,18 @@ class Builder
     /**
      * @return string
      */
+    public function buildDelete(): string
+    {
+        $sql = 'DELETE FROM ' . $this->table;
+
+        $sql .= $this->buildWhere();
+
+        return $sql;
+    }
+
+    /**
+     * @return string
+     */
     private function buildWhere(): string
     {
         $sql = '';
