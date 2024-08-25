@@ -30,7 +30,7 @@ class Make implements Controller
 
     /**
      * @cli make:model
-     * @cliDescription Make model: samlpe "php cli make:model Vendor/Module/Model/Name"
+     * @cliDescription Make model: sample "php cli make:model Vendor/Module/Model/Name"
      * @param string $modelName Full class name like "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"
      * @return void
      * @throws Exception
