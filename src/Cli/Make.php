@@ -207,7 +207,7 @@ class Make implements Controller
         $fullResourceModelName = ltrim($fullResourceModelName, '\\');
         $fullResourceModelName = str_replace('\\', '/', $fullResourceModelName);
         if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+$/', $fullResourceModelName)) {
-            throw new Exception('Invalid model name, should be in the format of "Vendor/Module/Model/Resource/Name" or "Vendor/Module/Model/Resource/Space/Name"');
+            throw new Exception('Invalid resource model name, should be in the format of "Vendor/Module/Model/Resource/Name" or "Vendor/Module/Model/Resource/Space/Name"');
         }
         $fullResourceModelName = str_replace('/', '\\', $fullResourceModelName);
 
@@ -235,6 +235,36 @@ class Make implements Controller
 
         file_put_contents($modelFile, $content);
 
-        echo Symbol::COLOR_GREEN . "The \"{$fullCollectionName}\" resource model successfully created at the {$modelFile} file\n" . Symbol::COLOR_RESET;
+        echo Symbol::COLOR_GREEN . "The \"{$fullCollectionName}\" collection successfully created at the {$modelFile} file\n" . Symbol::COLOR_RESET;
+    }
+
+    /**
+     * @cli make:model:bundle
+     * @cliDescription Make bundle for model, resource model and collection: sample "php cli make:model:bundle Vendor/Module/Model/Name
+     * @param string $modelName Full class name like "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"
+     * @param string $tableName The table name in the database
+     * @return void
+     * @throws Exception
+     */
+    public function makeBundle(string $modelName, string $tableName): void
+    {
+        $fullModelName = ltrim($modelName, '/');
+        $fullModelName = ltrim($fullModelName, '\\');
+        $fullModelName = str_replace('\\', '/', $fullModelName);
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+$/', $fullModelName)) {
+            throw new Exception('Invalid model name, should be in the format of "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"');
+        }
+
+        $exploded = explode('/', $fullModelName);
+        $moduleName = array_shift($exploded) . '/' . array_shift($exploded);
+        array_shift($exploded);
+        $modelName = implode("/", $exploded);
+
+        $resourceModel = "{$moduleName}/Model/Resource/{$modelName}";
+        $resourceCollection = "{$moduleName}/Model/Resource/{$modelName}/Collection";
+
+        $this->make($fullModelName);
+        $this->makeResource($resourceModel, $tableName);
+        $this->makeCollection($resourceCollection, $fullModelName, $resourceModel);
     }
 }
