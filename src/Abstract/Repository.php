@@ -14,7 +14,7 @@ abstract class Repository {
     /**
      * @var \Builder\Site\Model\Repository|null $instance
      */
-    private static ?RepositoryAbstract $instance = null;
+    protected static ?RepositoryAbstract $instance = null;
 
     /**
      * @var array $registered

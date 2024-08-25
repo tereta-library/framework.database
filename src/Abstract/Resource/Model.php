@@ -173,9 +173,9 @@ abstract class Model
         $pdoStat = $this->connection->prepare($query->build());
         $result = $pdoStat->execute($query->getParams());
 
-        if ($result && $this->idField && !$model->get($this->idField)) {
-            $id = $this->connection->lastInsertId();
-            $model->set($this->idField, $id);
+        $lastInsertId = null;
+        if ($result && $this->idField && !$model->get($this->idField) && $lastInsertId = $this->connection->lastInsertId()) {
+            $model->set($this->idField, $lastInsertId);
         }
 
         return $this;
