@@ -12,9 +12,9 @@ use Framework\Database\Abstract\Repository as RepositoryAbstract;
  */
 abstract class Repository {
     /**
-     * @var \Builder\Site\Model\Repository|null $instance
+     * @var array $instance
      */
-    protected static ?RepositoryAbstract $instance = null;
+    protected static array $instance = [];
 
     /**
      * @var array $registered
@@ -31,10 +31,12 @@ abstract class Repository {
      */
     public static function getInstance(): static
     {
-        if (static::$instance === null) {
-            static::$instance = new static();
+        $key = static::class;
+        if (isset(static::$instance[$key])) {
+            return static::$instance[$key];
         }
-        return static::$instance;
+
+        return static::$instance[$key] = new static;
     }
 
     /**
