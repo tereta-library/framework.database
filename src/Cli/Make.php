@@ -15,6 +15,9 @@ use Framework\Database\Abstract\Resource\Collection as AbstractResourceCollectio
  */
 class Make implements Controller
 {
+    /**
+     * @var string
+     */
     private string $rootDirectory;
 
     /**
