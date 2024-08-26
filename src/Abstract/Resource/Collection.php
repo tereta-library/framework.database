@@ -11,6 +11,7 @@ use Exception;
 use PDO;
 use PDOStatement;
 use Framework\Database\Select\Builder as SelectBuilder;
+use Framework\Database\Value\Query as ValueQuery;
 
 /**
  * ···························WWW.TERETA.DEV······························
@@ -111,6 +112,42 @@ abstract class Collection implements Iterator
         return $this;
     }
 
+    private ?int $limit = null;
+    private ?int $limitPage = null;
+
+    /**
+     * @param int $limit
+     * @return $this
+     */
+    public function setLimit(int $limit): static
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    /**
+     * @param int $page
+     * @return $this
+     */
+    public function setPage(int $page): static
+    {
+        $this->limitPage = $page;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSize(): int
+    {
+        $query = clone $this->getSelect();
+        $query->columns([new ValueQuery('COUNT(*) as count')]);
+        $pdoState = $this->connection->prepare($query->build());
+        $pdoState->execute($query->getParams());
+        $count = $pdoState->fetchColumn();
+        return $count;
+    }
+
     /**
      * @param bool $reset
      * @return PDOStatement
@@ -120,6 +157,13 @@ abstract class Collection implements Iterator
         if ($this->loadStatement && !$reset) {
             return $this->loadStatement;
         }
+
+        if (!is_null($this->limit) && !is_null($this->limitPage)) {
+            $this->getSelect()->limit($this->limit, $this->limit * ($this->limitPage - 1));
+        } elseif (!is_null($this->limit)) {
+            $this->getSelect()->limit($this->limit);
+        }
+
         $this->position = 0;
         $query = $this->getSelect();
         $pdoState = $this->connection->prepare($query->build());

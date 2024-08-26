@@ -51,6 +51,11 @@ class Builder
     private array $params = [];
 
     /**
+     * @var string
+     */
+    private string $limit = '';
+
+    /**
      * @param array $columns
      */
     public function __construct(array $columns = ['*'])
@@ -100,6 +105,9 @@ class Builder
             }
             $field = $this->valueCounter ? ":field{$this->valueCounter}" : ":field";
             $this->params[$field] = $variable;
+            if (!str_contains($condition, '?')) {
+                $condition = $condition . ' = ?';
+            }
             $condition = str_replace('?', $field, $condition);
         }
 
@@ -122,6 +130,22 @@ class Builder
     }
 
     /**
+     * @param int $limit
+     * @param int|null $offset
+     * @return $this
+     */
+    public function limit(int $limit, ?int $offset = null): static
+    {
+        if ($offset === null) {
+            $this->limit = ' LIMIT ' . $limit;
+            return $this;
+        }
+
+        $this->limit = ' LIMIT ' . $limit . ' OFFSET ' .  $offset;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function build(): string
@@ -133,6 +157,7 @@ class Builder
         }
 
         $sql .= $this->buildWhere();
+        $sql .= $this->limit;
 
         return $sql;
     }
