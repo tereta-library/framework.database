@@ -32,6 +32,11 @@ use Framework\Database\Select\Builder as SelectBuilder;
 abstract class Model
 {
     /**
+     * @var array $instance
+     */
+    protected static array $instance = [];
+
+    /**
      * @var Select|null $select
      */
     private ?SelectBuilder $select = null;
@@ -63,6 +68,19 @@ abstract class Model
     public function __construct(private string $table, private ?string $idField = null, string $connectionName = 'default')
     {
         $this->connection = SingletonDatabase::getConnection($connectionName);
+    }
+
+    /**
+     * @return static
+     */
+    public static function getInstance(): static
+    {
+        $key = static::class;
+        if (isset(static::$instance[$key])) {
+            return static::$instance[$key];
+        }
+
+        return static::$instance[$key] = new static;
     }
 
     /**
@@ -158,24 +176,32 @@ abstract class Model
 
     /**
      * @param ItemModel $model
-     * @return Model
+     * @param string|null $idField
+     * @return $this
      * @throws Exception
      */
-    public function save(ItemModel $model): static
+    public function save(ItemModel $model, string $idField = null): static
     {
+        if (!$idField) {
+            $idField = $this->idField;
+        }
+
         $this->prepareModel();
         $data = array_intersect_key($model->getData(), $this->description);
 
         $this->prepareModel();
         $query = Factory::createInsert($this->table)->values($data);
-        $query->updateOnDupilicate(...$this->uniqueFields);
+
+        if ($model->get($idField)) {
+            $query->updateOnDupilicate(...$this->uniqueFields);
+        }
 
         $pdoStat = $this->connection->prepare($query->build());
         $result = $pdoStat->execute($query->getParams());
 
         $lastInsertId = null;
-        if ($result && $this->idField && !$model->get($this->idField) && $lastInsertId = $this->connection->lastInsertId()) {
-            $model->set($this->idField, $lastInsertId);
+        if ($result && $idField && !$model->get($idField) && $lastInsertId = $this->connection->lastInsertId()) {
+            $model->set($idField, $lastInsertId);
         }
 
         return $this;
