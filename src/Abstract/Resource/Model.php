@@ -182,11 +182,12 @@ abstract class Model
      */
     public function save(ItemModel $model, string $idField = null): static
     {
+        $this->prepareModel();
+
         if (!$idField) {
             $idField = $this->idField;
         }
 
-        $this->prepareModel();
         $data = array_intersect_key($model->getData(), $this->description);
 
         $this->prepareModel();

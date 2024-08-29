@@ -24,7 +24,7 @@ abstract class Repository {
     /**
      * @var array
      */
-    protected array $registeredKeys = ['id', ['siteId', 'identifier']];
+    protected array $registeredKeys = [];
 
     /**
      * @return static
