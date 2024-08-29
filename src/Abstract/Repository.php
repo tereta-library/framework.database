@@ -70,7 +70,7 @@ abstract class Repository {
         $keys = $this->registeredKeys;
 
         if (!$entityModel->get('id')) {
-            throw new Exception('Site not found');
+            throw new Exception('ID not found');
         }
 
         foreach ($keys as $key) {
