@@ -27,6 +27,11 @@ abstract class Repository {
     protected array $registeredKeys = [];
 
     /**
+     * @var string $registeredId
+     */
+    protected string $registeredId = 'id';
+
+    /**
      * @return static
      */
     public static function getInstance(): static
@@ -69,7 +74,7 @@ abstract class Repository {
     {
         $keys = $this->registeredKeys;
 
-        if (!$entityModel->get('id')) {
+        if (!$entityModel->get($this->registeredId)) {
             throw new Exception('ID not found');
         }
 

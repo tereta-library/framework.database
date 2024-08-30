@@ -325,6 +325,12 @@ class Make implements Controller
             "    protected array \$registeredKeys = ['id', ['siteId', 'identifier']];\n" .
             "    \n" .
             "    /**\n" .
+            "     * @todo Change the id to match your logic\n" .
+            "     * @var array \$registeredId The id declaration used to register a model ID field on the setRegisterModel method.\n" .
+            "     */" .
+            "    protected array \$registeredId = 'id';\n" .
+            "    \n" .
+            "    /**\n" .
             "     * @todo This is mockup for future constructor with declared classes.\n" .
             "     */\n" .
             "    public function __construct()\n" .
