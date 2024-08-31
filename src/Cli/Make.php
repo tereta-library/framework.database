@@ -247,7 +247,7 @@ class Make implements Controller
 
     /**
      * @cli make:model:bundle
-     * @cliDescription Make bundle for model, resource model and collection: sample "php cli make:model:bundle Vendor/Module/Model/Name
+     * @cliDescription Make bundle for model, resource model and collection: sample "php cli make:model:bundle Vendor/Module/Model/Name tableName"
      * @param string $modelName Full class name like "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"
      * @param string $tableName The table name in the database
      * @return void

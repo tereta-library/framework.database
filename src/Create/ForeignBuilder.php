@@ -42,6 +42,12 @@ class ForeignBuilder
      */
     private string $comment = '';
 
+    /**
+     * @var null $fieldType
+     */
+    private $fieldType = null;
+
+    private bool $isPrimaryKey = false;
 
     /**
      * @param PDO $connection
@@ -65,7 +71,14 @@ class ForeignBuilder
         return $this;
     }
 
-    private $fieldType = null;
+    /**
+     * @return $this
+     */
+    public function setPrimaryKey(): static
+    {
+        $this->isPrimaryKey = true;
+        return $this;
+    }
 
     /**
      * @param string $table
@@ -147,6 +160,10 @@ class ForeignBuilder
     {
         if ($this->comment) {
             $this->fieldType->setComment($this->comment);
+        }
+
+        if ($this->isPrimaryKey) {
+            $this->fieldType->setPrimaryKey();
         }
 
         return "FOREIGN KEY ({$this->column}) REFERENCES {$this->foreignTable}({$this->foreignColumn}) ON DELETE CASCADE ON UPDATE CASCADE";
