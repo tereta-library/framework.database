@@ -95,12 +95,24 @@ class Builder
     const OPERATOR_AND = 0;
     const OPERATOR_OR = 1;
 
+    /**
+     * @param string $condition
+     * @param ...$variables
+     * @return $this
+     * @throws Exception
+     */
     public function whereOr(string $condition, ...$variables): static
     {
         $this->whereCondition(self::OPERATOR_OR, $condition, ...$variables);
         return $this;
     }
 
+    /**
+     * @param string $condition
+     * @param ...$variables
+     * @return $this
+     * @throws Exception
+     */
     public function where(string $condition, ...$variables): static
     {
         $this->whereCondition(self::OPERATOR_AND, $condition, ...$variables);
