@@ -221,7 +221,9 @@ abstract class Model
             $this->prepareModel();
             $field = $this->idField;
         }
-        if ($value instanceof ItemModel && count($params) < 1) $value = $value->get($field);
+        if ($value instanceof ItemModel) {
+            $value = $value->get($field) ? $value->get($field) : throw new Exception("The value {$field} is not set");
+        }
 
         $select = $this->getSelect();
         if (is_array($value) && $field) {
