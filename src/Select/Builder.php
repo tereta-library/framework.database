@@ -92,12 +92,28 @@ class Builder
         return $this;
     }
 
+    const OPERATOR_AND = 0;
+    const OPERATOR_OR = 1;
+
+    public function whereOr(string $condition, ...$variables): static
+    {
+        $this->whereCondition(self::OPERATOR_OR, $condition, ...$variables);
+        return $this;
+    }
+
+    public function where(string $condition, ...$variables): static
+    {
+        $this->whereCondition(self::OPERATOR_AND, $condition, ...$variables);
+        return $this;
+    }
+
     /**
+     * @param int $operator
      * @param string $condition
      * @param ...$variables
      * @return $this
      */
-    public function where(string $condition, ...$variables): static
+    public function whereCondition(int $operator, string $condition, ...$variables): static
     {
         foreach ($variables as $key => $variable) {
             if (is_array($variable)) {
@@ -111,8 +127,12 @@ class Builder
             $condition = str_replace('?', $field, $condition);
         }
 
+        $operatorString = 'AND';
+        $operatorString = ($operator == self::OPERATOR_AND ? 'AND' : $operatorString);
+        $operatorString = ($operator == self::OPERATOR_OR ? 'OR' : $operatorString);
+
         $this->where[] = [
-            'operator' => 'AND',
+            'operator' => $operatorString,
             'condition' => $condition
         ];
 

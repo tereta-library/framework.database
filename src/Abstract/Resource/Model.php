@@ -226,7 +226,7 @@ abstract class Model
         $select = $this->getSelect();
         if (is_array($value) && $field) {
             foreach ($value as $val) {
-                $select->where($field . ' = ?', $val);
+                $select->whereOr($field . ' = ?', $val);
             }
 
             $valueSearch = [];
@@ -244,7 +244,7 @@ abstract class Model
 
         $pdo = SingletonDatabase::getConnection();
         $pdoStatement = $pdo->prepare($select->buildDelete());
-        $pdoStatement->execute($select->getParams());
+        $executed = $pdoStatement->execute($select->getParams());
         $this->select = null;
         return $pdoStatement->rowCount();
     }
