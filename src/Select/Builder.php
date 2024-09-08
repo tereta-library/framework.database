@@ -101,9 +101,20 @@ class Builder
      * @param string $condition
      * @return $this
      */
-    public function innerJoin(string $table, string $condition): static
+    public function innerJoin(string|array $table, string $condition): static
     {
-        $this->innerJoin[$table] = $condition;
+        $as = null;
+        if (is_array($table) && count($table) == 1) {
+            $as = array_keys($table)[0];
+            $table = array_values($table)[0];
+        } elseif (is_array($table)) {
+            throw new Exception('Invalid table name');
+        }
+
+        $this->innerJoin[$table] = [
+            'as' => $as,
+            'condition' => $condition
+        ];
 
         return $this;
     }
@@ -225,9 +236,16 @@ class Builder
      */
     public function build(): string
     {
-        $sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ' . $this->table;
+        $sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ' . $this->table . ' AS main';
 
         foreach ($this->innerJoin as $table => $condition) {
+            if (is_array($condition) && $condition['as']) {
+                $table = "{$table} AS {$condition['as']}";
+                $condition = $condition['condition'];
+            } elseif (is_array($condition)) {
+                $condition = $condition['condition'];
+            }
+
             $sql .= " INNER JOIN {$table} ON {$condition}";
         }
 
