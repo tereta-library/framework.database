@@ -326,9 +326,9 @@ class Make implements Controller
             "    \n" .
             "    /**\n" .
             "     * @todo Change the id to match your logic\n" .
-            "     * @var array \$registeredId The id declaration used to register a model ID field on the setRegisterModel method.\n" .
-            "     */" .
-            "    protected array \$registeredId = 'id';\n" .
+            "     * @var string \$registeredId The id declaration used to register a model ID field on the setRegisterModel method.\n" .
+            "     */\n" .
+            "    protected string \$registeredId = 'id';\n" .
             "    \n" .
             "    /**\n" .
             "     * @todo This is mockup for future constructor with declared classes.\n" .
