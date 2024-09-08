@@ -31,6 +31,9 @@ use Framework\Database\Select\Builder as SelectBuilder;
  */
 abstract class Model
 {
+    const DIRECTION_ASC = SelectBuilder::DIRECTION_ASC;
+    const DIRECTION_DESC = SelectBuilder::DIRECTION_DESC;
+
     /**
      * @var array $instance
      */
@@ -147,9 +150,9 @@ abstract class Model
         $pdoStatement->execute($select->getParams());
 
         $itemData = $pdoStatement->fetch(PDO::FETCH_ASSOC);
+        $this->select = null;
         if (!$itemData) return false;
         $model->setData($itemData);
-        $this->select = null;
         return true;
     }
 
@@ -171,6 +174,17 @@ abstract class Model
     public function where(string $where, mixed ...$params): static
     {
         $this->getSelect()->where($where, ...$params);
+        return $this;
+    }
+
+    /**
+     * @param string $order
+     * @return $this
+     * @throws Exception
+     */
+    public function order(string $order, int $direction = self::DIRECTION_ASC): static
+    {
+        $this->getSelect()->order($order, $direction);
         return $this;
     }
 

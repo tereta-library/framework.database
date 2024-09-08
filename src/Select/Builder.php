@@ -25,6 +25,9 @@ use Exception;
  */
 class Builder
 {
+    const DIRECTION_ASC = 0;
+    const DIRECTION_DESC = 1;
+
     /**
      * @var string|null
      */
@@ -56,6 +59,11 @@ class Builder
     private string $limit = '';
 
     /**
+     * @var string $order
+     */
+    private string $order = '';
+
+    /**
      * @param array $columns
      */
     public function __construct(array $columns = ['*'])
@@ -83,8 +91,16 @@ class Builder
         return $this;
     }
 
+    /**
+     * @var array $innerJoin
+     */
     private array $innerJoin = [];
 
+    /**
+     * @param string $table
+     * @param string $condition
+     * @return $this
+     */
     public function innerJoin(string $table, string $condition): static
     {
         $this->innerJoin[$table] = $condition;
@@ -178,6 +194,33 @@ class Builder
     }
 
     /**
+     * @param string $field
+     * @param int $direction
+     * @return $this
+     * @throws Exception
+     */
+    public function order(string $field, int $direction = self::DIRECTION_ASC): static
+    {
+        if (preg_match('/[^a-zA-Z0-9_]/', $field)) {
+            throw new Exception('Field name contains invalid characters');
+        }
+
+        switch ($direction) {
+            case self::DIRECTION_ASC:
+                $directionKeyWord = 'ASC';
+                break;
+            case self::DIRECTION_DESC:
+                $directionKeyWord = 'DESC';
+                break;
+            default:
+                throw new Exception('Invalid direction');
+        }
+
+        $this->order = " ORDER BY {$field} {$directionKeyWord}";
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function build(): string
@@ -189,6 +232,7 @@ class Builder
         }
 
         $sql .= $this->buildWhere();
+        $sql .= $this->order;
         $sql .= $this->limit;
 
         return $sql;
