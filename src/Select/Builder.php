@@ -28,6 +28,13 @@ class Builder
     const DIRECTION_ASC = 0;
     const DIRECTION_DESC = 1;
 
+    const OPERATOR_AND = 0;
+    const OPERATOR_OR = 1;
+
+    const JOIN_TYPE_INNER = 0;
+    const JOIN_TYPE_LEFT = 1;
+    const JOIN_TYPE_RIGHT = 2;
+
     /**
      * @var string|null
      */
@@ -64,19 +71,35 @@ class Builder
     private string $order = '';
 
     /**
+     * @var array $join
+     */
+    private array $join = [];
+
+    /**
      * @param array $columns
      */
     public function __construct(array $columns = ['*'])
     {
-        $this->columns($columns);
+        $this->columns(...$columns);
     }
 
     /**
      * @param array $columns
      * @return $this
      */
-    public function columns(array $columns = ['*']): static
+    public function columns(...$columns): static
     {
+        if (!$columns) {
+            $columns = ['*'];
+        }
+
+        $columns = array_map(function($column) {
+            if (is_array($column)) {
+                return array_keys($column)[0] . ' AS ' . array_values($column)[0];
+            }
+            return $column;
+        }, $columns);
+
         $this->columns = $columns;
         return $this;
     }
@@ -92,16 +115,44 @@ class Builder
     }
 
     /**
-     * @var array $innerJoin
-     */
-    private array $innerJoin = [];
-
-    /**
      * @param string $table
      * @param string $condition
      * @return $this
      */
     public function innerJoin(string|array $table, string $condition): static
+    {
+        return $this->join(self::JOIN_TYPE_INNER, $table, $condition);
+    }
+
+    /**
+     * @param string|array $table
+     * @param string $condition
+     * @return $this
+     * @throws Exception
+     */
+    public function rightJoin(string|array $table, string $condition): static
+    {
+        return $this->join(self::JOIN_TYPE_RIGHT, $table, $condition);
+    }
+
+    /**
+     * @param string|array $table
+     * @param string $condition
+     * @return $this
+     * @throws Exception
+     */
+    public function leftJoin(string|array $table, string $condition): static
+    {
+        return $this->join(self::JOIN_TYPE_LEFT, $table, $condition);
+    }
+
+    /**
+     * @param int $type
+     * @param string|array $table
+     * @param string $condition
+     * @return $this
+     */
+    private function join(int $type, string|array $table, string $condition): static
     {
         $as = null;
         if (is_array($table) && count($table) == 1) {
@@ -111,16 +162,14 @@ class Builder
             throw new Exception('Invalid table name');
         }
 
-        $this->innerJoin[$table] = [
-            'as' => $as,
+        $this->join[$table] = [
+            'type'      => $type,
+            'as'        => $as,
             'condition' => $condition
         ];
 
         return $this;
     }
-
-    const OPERATOR_AND = 0;
-    const OPERATOR_OR = 1;
 
     /**
      * @param string $condition
@@ -238,7 +287,8 @@ class Builder
     {
         $sql = 'SELECT ' . implode(', ', $this->columns) . ' FROM ' . $this->table . ' AS main';
 
-        foreach ($this->innerJoin as $table => $condition) {
+        foreach ($this->join as $table => $condition) {
+            $type = $condition['type'];
             if (is_array($condition) && $condition['as']) {
                 $table = "{$table} AS {$condition['as']}";
                 $condition = $condition['condition'];
@@ -246,7 +296,20 @@ class Builder
                 $condition = $condition['condition'];
             }
 
-            $sql .= " INNER JOIN {$table} ON {$condition}";
+            $joinType = 'INNER';
+            switch ($type) {
+                case self::JOIN_TYPE_INNER:
+                    $joinType = 'INNER';
+                    break;
+                case self::JOIN_TYPE_LEFT:
+                    $joinType = 'LEFT';
+                    break;
+                case self::JOIN_TYPE_RIGHT:
+                    $joinType = 'RIGHT';
+                    break;
+            }
+
+            $sql .= " {$joinType} JOIN {$table} ON {$condition}";
         }
 
         $sql .= $this->buildWhere();

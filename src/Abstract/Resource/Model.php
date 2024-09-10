@@ -147,7 +147,11 @@ abstract class Model
 
         $pdo = SingletonDatabase::getConnection();
         $pdoStatement = $pdo->prepare($select->build());
-        $pdoStatement->execute($select->getParams());
+        try {
+            $pdoStatement->execute($select->getParams());
+        } catch (Exception $e) {
+            throw new $e;
+        }
 
         $itemData = $pdoStatement->fetch(PDO::FETCH_ASSOC);
         $this->select = null;

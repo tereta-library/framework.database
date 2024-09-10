@@ -141,7 +141,7 @@ abstract class Collection implements Iterator
     public function getSize(): int
     {
         $query = clone $this->getSelect();
-        $query->columns([new ValueQuery('COUNT(*) as count')]);
+        $query->columns(new ValueQuery('COUNT(*) as count'));
         $pdoState = $this->connection->prepare($query->build());
         $pdoState->execute($query->getParams());
         $count = $pdoState->fetchColumn();
