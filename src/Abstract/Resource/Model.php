@@ -150,7 +150,7 @@ abstract class Model
         try {
             $pdoStatement->execute($select->getParams());
         } catch (Exception $e) {
-            throw new $e;
+            throw $e;
         }
 
         $itemData = $pdoStatement->fetch(PDO::FETCH_ASSOC);
