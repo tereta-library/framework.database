@@ -8,6 +8,8 @@ use Framework\Database\Create\Builder as CreateBuilder;
 use Framework\Database\Create\Factory as CreateFactory;
 use Framework\Database\Insert\Builder as InsertBuilder;
 use Framework\Database\Insert\Factory as InsertFactory;
+use Framework\Database\Alter\Factory as AlterFactory;
+use Framework\Database\Alter\Builder as AlterBuilder;
 
 /**
  * ···························WWW.TERETA.DEV······························
@@ -55,5 +57,14 @@ class Factory
     public static function createInsert(string $table): InsertBuilder
     {
         return InsertFactory::create($table);
+    }
+
+    /**
+     * @param string $table
+     * @return AlterBuilder
+     */
+    public static function createAlter(string $table): AlterBuilder
+    {
+        return AlterFactory::create($table);
     }
 }
