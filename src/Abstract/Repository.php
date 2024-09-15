@@ -6,6 +6,7 @@ use Builder\Site\Model\Site as EntityModel;
 use Exception;
 use Framework\Database\Abstract\Model;
 use Framework\Database\Abstract\Repository as RepositoryAbstract;
+use Framework\Database\Exception\Db\Repository as RepositoryException;
 
 /**
  * @class Framework\Database\Abstract\Repository
@@ -75,7 +76,7 @@ abstract class Repository {
         $keys = $this->registeredKeys;
 
         if (!$entityModel->get($this->registeredId)) {
-            throw new Exception('ID not found');
+            throw new RepositoryException('ID not found', RepositoryException::ERROR_ID_NOT_FOUND);
         }
 
         foreach ($keys as $key) {
