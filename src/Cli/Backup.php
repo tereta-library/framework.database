@@ -37,13 +37,13 @@ class Backup implements Controller
     }
 
     /**
-     * @cli database:backup
+     * @cli database:dump
      * @cliDescription Create a backup of the database
      * @param null|string $file file to store the backup
      * @return void
      * @throws Exception
      */
-    public function backup(string $file = ''): void
+    public function dump(string $file = ''): void
     {
         if (!$file) {
             $dirName = "{$this->varDirectory}/backup/";
