@@ -97,6 +97,10 @@ class Builder
                     continue;
                 }
 
+                if (!is_scalar($itemValue) && !is_null($itemValue)) {
+                    throw new Exception("The \"{$itemKey}\" value is not scalar");
+                }
+                
                 $insertKey = ":{$itemNumber}_{$itemKey}";
                 $this->values[$insertKey] = $itemValue;
                 $preparedItem[] = $insertKey;

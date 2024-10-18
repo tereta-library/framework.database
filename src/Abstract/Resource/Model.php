@@ -216,6 +216,7 @@ abstract class Model
         }
 
         $pdoStat = $this->connection->prepare($query->build());
+
         $result = $pdoStat->execute($query->getParams());
 
         $lastInsertId = null;
