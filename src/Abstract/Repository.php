@@ -76,7 +76,8 @@ abstract class Repository {
         $keys = $this->registeredKeys;
 
         if (!$entityModel->get($this->registeredId)) {
-            throw new RepositoryException('ID not found', RepositoryException::ERROR_ID_NOT_FOUND);
+            $className = $entityModel::class;
+            throw new RepositoryException("The {$className} model is not loaded", RepositoryException::ERROR_ID_NOT_FOUND);
         }
 
         foreach ($keys as $key) {
