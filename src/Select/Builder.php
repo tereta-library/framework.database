@@ -208,11 +208,14 @@ class Builder
                 throw new Exception('Parameter $variable must not be an array');
             }
             $field = $this->valueCounter ? ":field{$this->valueCounter}" : ":field";
+            $this->valueCounter++;
             $this->params[$field] = $variable;
             if (!str_contains($condition, '?')) {
                 $condition = $condition . ' = ?';
             }
-            $condition = str_replace('?', $field, $condition);
+            $strPos = strpos($condition, '?');
+            $condition = substr_replace($condition, $field, $strPos, 1);
+            $e=0;
         }
 
         $operatorString = 'AND';
@@ -223,8 +226,6 @@ class Builder
             'operator' => $operatorString,
             'condition' => $condition
         ];
-
-        $this->valueCounter++;
 
         return $this;
     }
