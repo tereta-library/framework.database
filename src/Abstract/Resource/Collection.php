@@ -65,6 +65,16 @@ abstract class Collection implements Iterator
     private PDO $connection;
 
     /**
+     * @var int|null
+     */
+    private ?int $limit = null;
+
+    /**
+     * @var int|null 
+     */
+    private ?int $limitPage = null;
+
+    /**
      * @param string $resourceModel
      * @param string $model
      * @param string $connectionName
@@ -111,9 +121,6 @@ abstract class Collection implements Iterator
         $this->getSelect()->where($condition, ...$params);
         return $this;
     }
-
-    private ?int $limit = null;
-    private ?int $limitPage = null;
 
     /**
      * @param int $limit

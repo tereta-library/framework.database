@@ -135,7 +135,7 @@ abstract class Model
         $select = $this->getSelect();
         if (is_array($value)) {
             $valueSearch = $value;
-        } elseif ($value && $field) {
+        } elseif ($field) {
             $valueSearch = [$field => $value];
         } else  {
             $valueSearch = [];
