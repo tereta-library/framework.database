@@ -75,6 +75,11 @@ abstract class Collection implements Iterator
     private ?int $limitPage = null;
 
     /**
+     * @var array|null
+     */
+    private ?array $columns = null;
+
+    /**
      * @param string $resourceModel
      * @param string $model
      * @param string $connectionName
@@ -109,6 +114,32 @@ abstract class Collection implements Iterator
         }
         $this->select = SelectFactory::create()->from($this->resourceModel->getTable());
         return $this->select;
+    }
+
+    /**
+     * @param string $column
+     * @param int|string|array|null $value
+     * @return $this
+     * @throws Exception
+     */
+    public function filter(string $column, int|string|null|array $value): static
+    {
+        if (!is_array($value)) {
+            $this->getSelect()->where("{$column} = ?", $value);
+            return $this;
+        }
+
+        if (is_array($value) && count($value) == 0) {
+            $this->getSelect()->where("FALSE");
+            return $this;
+        }
+
+        foreach (is_array($value) ? $value : [] as $itemValue) {
+            $this->getSelect()->where("{$column} = ?", $itemValue);
+        }
+
+        return $this;
+
     }
 
     /**
@@ -155,6 +186,44 @@ abstract class Collection implements Iterator
         return $count;
     }
 
+    public function columns(...$columns): static
+    {
+        $this->getSelect()->columns(...$columns);
+        return $this;
+    }
+
+    private array $joinModels = [];
+
+    /**
+     * @param ResourceModel $resourceModel
+     * @param array $fields
+     * @return $this
+     */
+    public function innerJoin(ResourceModel $resourceModel, array $fields, array $model): static
+    {
+        $leftKey = array_keys($fields)[0];
+        $rightKey = $fields[$leftKey];
+        $this->getSelect()->innerJoin(
+            $resourceModel->getTable(), "main.{$leftKey} = {$resourceModel->getTable()}.{$rightKey}"
+        );
+
+        if (is_null($this->columns)) {
+            $this->resourceModel->getDescription();
+            $this->columns = [];
+            foreach ($this->resourceModel->getDescription() as $field) {
+                $this->columns[] = ['main.' . $field['Field'] => 'main.' . $field['Field']];
+            }
+        }
+
+        foreach ($resourceModel->getDescription() as $field) {
+            $this->columns[] = [$resourceModel->getTable() . '.' . $field['Field'] => $resourceModel->getTable() . '.' . $field['Field']];
+        }
+
+        $this->joinModels[$resourceModel->getTable()] = $model;
+
+        return $this;
+    }
+
     /**
      * @param bool $reset
      * @return PDOStatement
@@ -173,6 +242,9 @@ abstract class Collection implements Iterator
 
         $this->position = 0;
         $query = $this->getSelect();
+        if ($this->columns !== null) {
+            $query->columns(...$this->columns);
+        }
         $pdoState = $this->connection->prepare($query->build());
         $pdoState->execute($query->getParams());
 
@@ -195,7 +267,43 @@ abstract class Collection implements Iterator
         $this->position++;
         $data = $this->loadStatement->fetch(PDO::FETCH_ASSOC);
         $model = $this->model;
-        return new $model($data);
+
+        $keys = array_keys($data);
+        $joinedData = [];
+        foreach ($keys as $keyItem) {
+            $keyItemExploded = explode('.', $keyItem);
+            if (count($keyItemExploded) == 1) {
+                continue;
+            }
+
+            if ($keyItemExploded[0] == 'main') {
+                $data[$keyItemExploded[1]] = $data[$keyItem];
+                unset($data[$keyItem]);
+                continue;
+            }
+
+            if (!isset($joinedData[$keyItemExploded[0]])) {
+                $joinedData[$keyItemExploded[0]] = [];
+            }
+
+            $joinedData[$keyItemExploded[0]][$keyItemExploded[1]] = $data[$keyItem];
+            unset($data[$keyItem]);
+        }
+
+        $joinModels = [];
+        foreach ($joinedData as $key=>$value) {
+            if (!isset($this->joinModels[$key])) {
+                continue;
+            }
+
+            $joinMap = $this->joinModels[$key];
+
+            $modelKey = array_keys($joinMap)[0];
+            $modelClass = $joinMap[$modelKey]::class;
+            $joinModels[$modelKey] = new $modelClass($value);
+        }
+
+        return new $model($data, $joinModels);
     }
 
     /**

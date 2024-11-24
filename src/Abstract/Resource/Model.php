@@ -117,6 +117,16 @@ abstract class Model
     }
 
     /**
+     * @return array
+     * @throws Exception
+     */
+    public function getDescription(): array
+    {
+        $this->prepareModel();
+        return $this->description;
+    }
+
+    /**
      * @param ItemModel $model
      * @param string|int|float|null $value
      * @param string|null $field
@@ -126,8 +136,13 @@ abstract class Model
     public function load(ItemModel $model, string|int|float|null|array $value = null, ?string $field = null): bool
     {
         $params = func_get_args();
-        if (!$field && !is_array($value) && $value !== null) {
+        if (!$field && !is_array($value)) {
             $this->prepareModel();
+        }
+        if (!$field && !is_array($value) && $model->has($this->idField)) {
+            $value = $model->get($this->idField);
+        }
+        if (!$field && !is_array($value) && $value !== null) {
             $field = $this->idField;
         }
         if ($field && $value === null && count($params) < 2) $value = $model->get($field);

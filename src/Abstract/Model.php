@@ -31,7 +31,7 @@ abstract class Model
     /**
      * @param array $data
      */
-    public function __construct(private array $data = [])
+    public function __construct(private array $data = [], private array $relations = [])
     {
         $this->originalData = $data;
     }
@@ -62,6 +62,15 @@ abstract class Model
     public function __unset(string $name): void
     {
         $this->unset($name);
+    }
+
+    /**
+     * @param string $name
+     * @return $this|null
+     */
+    public function getRelation(string $name): ?self
+    {
+        return $this->relations[$name] ?? null;
     }
 
     /**
@@ -107,6 +116,15 @@ abstract class Model
     public function get(string $key): mixed
     {
         return $this->data[$key] ?? null;
+    }
+
+    /**
+     * @param string $key
+     * @return bool
+     */
+    public function has(string $key): bool
+    {
+        return isset($this->data[$key]);
     }
 
     /**

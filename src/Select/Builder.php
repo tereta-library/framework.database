@@ -95,7 +95,7 @@ class Builder
 
         $columns = array_map(function($column) {
             if (is_array($column)) {
-                return array_keys($column)[0] . ' AS ' . array_values($column)[0];
+                return array_keys($column)[0] . ' AS `' . array_values($column)[0] . '`';
             }
             return $column;
         }, $columns);
