@@ -126,11 +126,11 @@ abstract class Model
     public function load(ItemModel $model, string|int|float|null|array $value = null, ?string $field = null): bool
     {
         $params = func_get_args();
-        if (!$field && !is_array($value)) {
+        if (!$field && !is_array($value) && $value !== null) {
             $this->prepareModel();
             $field = $this->idField;
         }
-        if ($value === null && count($params) < 2) $value = $model->get($field);
+        if ($field && $value === null && count($params) < 2) $value = $model->get($field);
 
         $select = $this->getSelect();
         if (is_array($value)) {
