@@ -129,6 +129,19 @@ abstract class Model
 
     /**
      * @param string $key
+     * @return bool
+     */
+    public function isChanged(string $key): bool
+    {
+        if (!isset($this->originalData[$key]) || !isset($this->data[$key])) {
+            return false;
+        }
+
+        return $this->originalData[$key] !== $this->data[$key];
+    }
+
+    /**
+     * @param string $key
      * @return $this
      */
     public function unset(string $key): static

@@ -171,7 +171,7 @@ abstract class Model
         $itemData = $pdoStatement->fetch(PDO::FETCH_ASSOC);
         $this->select = null;
         if (!$itemData) return false;
-        $model->setData($itemData);
+        $model->setData($itemData, true);
         return true;
     }
 
@@ -226,8 +226,24 @@ abstract class Model
         $this->prepareModel();
         $query = Factory::createInsert($this->table)->values($data);
 
-        if ($model->get($idField)) {
+        // Detect unique detection
+        $useUniqueDuplication = false;
+        foreach ($this->uniqueFields as $uniqueKey) {
+            if ($model->has($uniqueKey)) {
+                $useUniqueDuplication = true;
+            }
+        }
+
+        foreach ($useUniqueDuplication ? $this->uniqueFields : [] as $uniqueKey) {
+            if ($model->isChanged($uniqueKey)) {
+                $useUniqueDuplication = false;
+            }
+        }
+
+        if ($useUniqueDuplication) {
             $query->updateOnDupilicate(...$this->uniqueFields);
+        } elseif ($model->get($idField)) {
+            $query->updateOnDupilicate($this->idField);
         }
 
         $pdoStat = $this->connection->prepare($query->build());
