@@ -28,22 +28,22 @@ use InvalidArgumentException;
 class Builder
 {
 
-    const TYPE_BIGINT = 9223372036854776000 - 1;
-    const TYPE_INT = 2147483647;
-    const TYPE_MEDIUMINT = 8388607;
-    const TYPE_SMALLINT = 32767;
-    const TYPE_TINYINT = 127;
+    const float TYPE_BIGINT = (9223372036854776000 - 1);
+    const int TYPE_INT = 2147483647;
+    const int TYPE_MEDIUMINT = 8388607;
+    const int TYPE_SMALLINT = 32767;
+    const int TYPE_TINYINT = 127;
 
-    const TYPE_BIGINT_UNSIGNED = 18446744073709552000 - 1;
-    const TYPE_INT_UNSIGNED = 4294967295;
-    const TYPE_MEDIUMINT_UNSIGNED = 16777215;
-    const TYPE_SMALLINT_UNSIGNED = 65535;
-    const TYPE_TINYINT_UNSIGNED = 255;
+    const float TYPE_BIGINT_UNSIGNED = (18446744073709552000 - 1);
+    const int TYPE_INT_UNSIGNED = 4294967295;
+    const int TYPE_MEDIUMINT_UNSIGNED = 16777215;
+    const int TYPE_SMALLINT_UNSIGNED = 65535;
+    const int TYPE_TINYINT_UNSIGNED = 255;
 
-    const TYPE_LONGTEXT = 4294967295;
-    const TYPE_MEDIUMTEXT = 16777215;
-    const TYPE_TEXT = 65535;
-    const TYPE_VARCHAR = 255;
+    const int TYPE_LONGTEXT = 4294967295;
+    const int TYPE_MEDIUMTEXT = 16777215;
+    const int TYPE_TEXT = 65535;
+    const int TYPE_VARCHAR = 255;
 
     /**
      * @var array $columns

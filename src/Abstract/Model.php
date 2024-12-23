@@ -124,7 +124,7 @@ abstract class Model
      */
     public function has(string $key): bool
     {
-        return isset($this->data[$key]);
+        return in_array($key, array_keys($this->data));
     }
 
     /**
