@@ -94,6 +94,17 @@ class Builder
         return $this->table;
     }
 
+    public function addVarChar(string $columnName, int $length = 255): ColumnBuilder
+    {
+        if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
+            throw new InvalidArgumentException("Column name '{$columnName}' is invalid");
+        }
+
+        $column = new ColumnBuilder($columnName, "varchar({$length})", ColumnBuilder::TYPE_TEXT);
+        $this->columns[] = $column;
+        return $column;
+    }
+
     /**
      * @param string $columnName
      * @param int $length

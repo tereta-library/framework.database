@@ -71,13 +71,12 @@ abstract class Repository {
      * @return Model
      * @throws Exception
      */
-    protected function setRegisterModel(Model $entityModel): Model
+    protected function setRegisterModel(Model $entityModel): ?Model
     {
         $keys = $this->registeredKeys;
 
         if (!$entityModel->has($this->registeredId)) {
-            $className = $entityModel::class;
-            throw new RepositoryException("The {$className} model is not loaded", RepositoryException::ERROR_ID_NOT_FOUND);
+            return null;
         }
 
         foreach ($keys as $key) {

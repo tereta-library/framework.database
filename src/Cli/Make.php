@@ -277,7 +277,7 @@ class Make implements Controller
 
     /**
      * @cli make:model:repository
-     * @cliDescription Make repository for model, resource model and collection: sample "php cli make:model:repository Vendor/Module/Model/Name
+     * @cliDescription Make repository for model, resource model and collection: sample "php cli make:model:repository Vendor/Module/Model/Name/Repository
      * @param string $modelName
      * @return void
      */
@@ -285,7 +285,7 @@ class Make implements Controller
     {
         $dateTime = date('Y-m-d H:i:s');
         $repositoryName = ltrim($repositoryName, '/');
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+\/Repository$/', $repositoryName)) {
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[A-Za-z]+)\/Model(\/[A-Z]{1}[a-zA-Z]+)+\/Repository$/', $repositoryName)) {
             throw new Exception('Invalid collection name, should be in the format of "Vendor/Module/Model/Name/Repository" or "Vendor/Module/Model/Resource/Space/Name/Repository"');
         }
 
