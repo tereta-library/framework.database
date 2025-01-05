@@ -110,14 +110,16 @@ class Builder
         $query = "INSERT INTO {$this->table} (" . implode(", ", $this->fields) . ") VALUES (" . implode('), (', $values) . ")";
 
         if ($this->onDuplicate && $this->fields) {
-            $query .= " ON DUPLICATE KEY UPDATE ";
             $updateArray = [];
 
             foreach ($this->fields as $field) {
                 if (in_array($field, $this->onDuplicate)) continue;
                 $updateArray[] = "{$field} = VALUES({$field})";
             }
-            $query .= implode(", ", $updateArray);
+
+            if ($updateArray) {
+                $query .= " ON DUPLICATE KEY UPDATE " . implode(", ", $updateArray);
+            }
         }
 
         return $query;

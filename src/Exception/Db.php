@@ -25,4 +25,29 @@ use Exception;
  */
 class Db extends Exception
 {
+    private ?string $sqlQuery = null;
+
+    private array $parameters = [];
+
+    public function setQuery(string $query): self
+    {
+        $this->sqlQuery = $query;
+        return $this;
+    }
+
+    public function getQuery(): ?string
+    {
+        return $this->sqlQuery;
+    }
+
+    public function setParameters(array $parameters = []): self
+    {
+        $this->parameters = $parameters;
+        return $this;
+    }
+
+    public function getParameters(): ?array
+    {
+        return $this->parameters;
+    }
 }

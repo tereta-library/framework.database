@@ -9,7 +9,7 @@ use PDO;
 use Exception;
 use Framework\Database\Facade;
 use Framework\Database\Select\Builder as SelectBuilder;
-
+use Framework\Database\Exception\Db as DbException;
 /**
  * ···························WWW.TERETA.DEV······························
  * ·······································································
@@ -248,7 +248,11 @@ abstract class Model
 
         $pdoStat = $this->connection->prepare($query->build());
 
-        $result = $pdoStat->execute($query->getParams());
+        try {
+            $result = $pdoStat->execute($query->getParams());
+        } catch (Exception $e) {
+            throw (new DbException($e->getMessage()))->setQuery($query->build())->setParameters($query->getParams());
+        }
 
         $lastInsertId = null;
         if ($result && $idField && !$model->get($idField) && $lastInsertId = $this->connection->lastInsertId()) {
