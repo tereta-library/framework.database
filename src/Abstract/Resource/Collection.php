@@ -70,7 +70,7 @@ abstract class Collection implements Iterator
     private ?int $limit = null;
 
     /**
-     * @var int|null 
+     * @var int|null
      */
     private ?int $limitPage = null;
 
@@ -78,6 +78,11 @@ abstract class Collection implements Iterator
      * @var array|null
      */
     private ?array $columns = null;
+
+    /**
+     * @var array
+     */
+    private array $joinModels = [];
 
     /**
      * @param string $resourceModel
@@ -186,20 +191,22 @@ abstract class Collection implements Iterator
         return $count;
     }
 
+    /**
+     * @param ...$columns
+     * @return $this
+     */
     public function columns(...$columns): static
     {
         $this->getSelect()->columns(...$columns);
         return $this;
     }
 
-    private array $joinModels = [];
-
     /**
      * @param ResourceModel $resourceModel
      * @param array $fields
      * @return $this
      */
-    public function innerJoin(ResourceModel $resourceModel, array $fields, array $model): static
+    public function innerJoin(ResourceModel $resourceModel, array $fields, Model $model): static
     {
         $leftKey = array_keys($fields)[0];
         $rightKey = $fields[$leftKey];
@@ -296,11 +303,9 @@ abstract class Collection implements Iterator
                 continue;
             }
 
-            $joinMap = $this->joinModels[$key];
-
-            $modelKey = array_keys($joinMap)[0];
-            $modelClass = $joinMap[$modelKey]::class;
-            $joinModels[$modelKey] = new $modelClass($value);
+            $modelKey = $this->joinModels[$key];
+            $modelClass = $modelKey::class;
+            $joinModels[$key] = new $modelClass($value);
         }
 
         return new $model($data, $joinModels);
