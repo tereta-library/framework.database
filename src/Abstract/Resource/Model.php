@@ -10,6 +10,8 @@ use Exception;
 use Framework\Database\Facade;
 use Framework\Database\Select\Builder as SelectBuilder;
 use Framework\Database\Exception\Db as DbException;
+use Framework\Pattern\Traits\Singleton as SingletonTrait;
+
 /**
  * ···························WWW.TERETA.DEV······························
  * ·······································································
@@ -31,13 +33,10 @@ use Framework\Database\Exception\Db as DbException;
  */
 abstract class Model
 {
+    use SingletonTrait;
+
     const DIRECTION_ASC = SelectBuilder::DIRECTION_ASC;
     const DIRECTION_DESC = SelectBuilder::DIRECTION_DESC;
-
-    /**
-     * @var array $instance
-     */
-    protected static array $instance = [];
 
     /**
      * @var Select|null $select
@@ -73,18 +72,6 @@ abstract class Model
         $this->connection = SingletonDatabase::getConnection($connectionName);
     }
 
-    /**
-     * @return static
-     */
-    public static function getInstance(): static
-    {
-        $key = static::class;
-        if (isset(static::$instance[$key])) {
-            return static::$instance[$key];
-        }
-
-        return static::$instance[$key] = new static;
-    }
 
     /**
      * @return string
