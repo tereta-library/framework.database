@@ -7,15 +7,14 @@ use Exception;
 use Framework\Database\Abstract\Model;
 use Framework\Database\Abstract\Repository as RepositoryAbstract;
 use Framework\Database\Exception\Db\Repository as RepositoryException;
+use Framework\Pattern\Traits\Singleton as SingletonTrait;
+use Framework\Helper\Strings as StringsHelper;
 
 /**
  * @class Framework\Database\Abstract\Repository
  */
 abstract class Repository {
-    /**
-     * @var array $instance
-     */
-    protected static array $instance = [];
+    use SingletonTrait;
 
     /**
      * @var array $registered
@@ -33,19 +32,6 @@ abstract class Repository {
     protected string $registeredId = 'id';
 
     /**
-     * @return static
-     */
-    public static function getInstance(): static
-    {
-        $key = static::class;
-        if (isset(static::$instance[$key])) {
-            return static::$instance[$key];
-        }
-
-        return static::$instance[$key] = new static;
-    }
-
-    /**
      * @param array $valuesSource
      * @return Model|null
      */
@@ -58,7 +44,7 @@ abstract class Repository {
             $values[] = $valueItem;
         }
 
-        $valuesHash = $this->getKey(...$values);
+        $valuesHash = StringsHelper::generateKey(...$values);
         if (!isset($this->registered[$key][$valuesHash])) {
             return null;
         }
@@ -81,7 +67,7 @@ abstract class Repository {
 
         foreach ($keys as $key) {
             if (!is_array($key)) {
-                $this->registered[$key][$this->getKey($entityModel->get($key))] = $entityModel;
+                $this->registered[$key][StringsHelper::generateKey($entityModel->get($key))] = $entityModel;
                 continue;
             }
 
@@ -92,18 +78,9 @@ abstract class Repository {
                 $itemKeyValue[] = $entityModel->get($item);
             }
 
-            $this->registered[$itemKey][$this->getKey(...$itemKeyValue)] = $entityModel;
+            $this->registered[$itemKey][StringsHelper::generateKey(...$itemKeyValue)] = $entityModel;
         }
 
         return $entityModel;
-    }
-
-    /**
-     * @param ...$params
-     * @return int
-     */
-    protected function getKey(...$params): int
-    {
-        return crc32(implode(':', $params));
     }
 }
