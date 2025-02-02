@@ -5,82 +5,66 @@ namespace Framework\Database\Abstract;
 use Builder\Site\Model\Site as EntityModel;
 use Exception;
 use Framework\Database\Abstract\Model;
+use Framework\Database\Abstract\Model as ModelAbstract;
 use Framework\Database\Abstract\Repository as RepositoryAbstract;
 use Framework\Database\Exception\Db\Repository as RepositoryException;
 use Framework\Pattern\Traits\Singleton as SingletonTrait;
 use Framework\Helper\Strings as StringsHelper;
+use Framework\Database\Abstract\Resource\Model as AbstractResourceModel;
+use Framework\Database\Abstract\Resource\Collection as AbstractResourceCollection;
+use Framework\Pattern\Traits\Cache as CacheTrait;
 
 /**
  * @class Framework\Database\Abstract\Repository
  */
 abstract class Repository {
     use SingletonTrait;
+    use CacheTrait;
 
     /**
-     * @var array $registered
+     * @var ModelAbstract
      */
-    private array $registered = [];
+    protected ModelAbstract $model;
 
     /**
-     * @var array
+     * @var ResourceModelAbstract
      */
-    protected array $registeredKeys = [];
+    protected AbstractResourceModel $resourceModel;
 
     /**
-     * @var string $registeredId
+     * @var ResourceModelCollectionAbstract
      */
-    protected string $registeredId = 'id';
+    protected ?AbstractResourceCollection $collection;
 
     /**
-     * @param array $valuesSource
-     * @return Model|null
+     * @throws RepositoryException
      */
-    protected function getRegisterModel(array $valuesSource): ?Model
+    protected function __construct()
     {
-        $key = '';
-        $values = [];
-        foreach ($valuesSource as $keyItem => $valueItem) {
-            $key .= ($key ? ':' : '') . $keyItem;
-            $values[] = $valueItem;
-        }
-
-        $valuesHash = StringsHelper::generateKey(...$values);
-        if (!isset($this->registered[$key][$valuesHash])) {
-            return null;
-        }
-
-        return $this->registered[$key][$valuesHash];
+        /**
+        $this->model = new ModelAbstract;
+        $this->resourceModel = new ResourceModelAbstract;
+        $this->collection = new ResourceModelCollectionAbstract;
+        */
     }
 
     /**
-     * @param Model $entityModel
-     * @return Model
+     * @param int $id
+     * @return ModelAbstract
      * @throws Exception
      */
-    protected function setRegisterModel(Model $entityModel): ?Model
+    public function getById(int $id): ModelAbstract
     {
-        $keys = $this->registeredKeys;
-
-        if (!$entityModel->has($this->registeredId)) {
-            return null;
+        if ($cached = $this->getCache($id)) {
+            return $cached;
         }
 
-        foreach ($keys as $key) {
-            if (!is_array($key)) {
-                $this->registered[$key][StringsHelper::generateKey($entityModel->get($key))] = $entityModel;
-                continue;
-            }
+        $this->resourceModel->load($model = new ($this->entityModel::class), ['id' => $id]);
 
-            $itemKey = '';
-            $itemKeyValue = [];
-            foreach($key as $item) {
-                $itemKey .= ($itemKey ? ':' : '') . $item;
-                $itemKeyValue[] = $entityModel->get($item);
-            }
-
-            $this->registered[$itemKey][StringsHelper::generateKey(...$itemKeyValue)] = $entityModel;
+        if (!$model->get('id')) {
+            throw new Exception('Model not found');
         }
 
-        return $entityModel;
+        return $this->setCache($model, $id);
     }
 }

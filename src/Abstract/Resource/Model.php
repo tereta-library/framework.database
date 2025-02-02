@@ -2,7 +2,8 @@
 
 namespace Framework\Database\Abstract\Resource;
 
-use Framework\Database\Abstract\Model as ItemModel;
+use Framework\Database\Abstract\Model as AbstractModel;
+use Framework\Database\Abstract\Resource\Model as ResourceModel;
 use Framework\Database\Factory;
 use Framework\Database\Singleton as SingletonDatabase;
 use PDO;
@@ -114,13 +115,13 @@ abstract class Model
     }
 
     /**
-     * @param ItemModel $model
+     * @param AbstractModel $model
      * @param string|int|float|null $value
      * @param string|null $field
      * @return bool
      * @throws Exception
      */
-    public function load(ItemModel $model, string|int|float|null|array $value = null, ?string $field = null): bool
+    public function load(AbstractModel $model, string|int|float|null|array $value = null, ?string $field = null): bool
     {
         $params = func_get_args();
         if (!$field && !is_array($value)) {
@@ -195,12 +196,12 @@ abstract class Model
     }
 
     /**
-     * @param ItemModel $model
+     * @param AbstractModel $model
      * @param string|null $idField
      * @return $this
      * @throws Exception
      */
-    public function save(ItemModel $model, string $idField = null): static
+    public function save(AbstractModel $model, string $idField = null): static
     {
         $this->prepareModel();
 
@@ -250,19 +251,19 @@ abstract class Model
     }
 
     /**
-     * @param ItemModel|string|int|float|array|null $value
+     * @param AbstractModel|string|int|float|array|null $value
      * @param string|null $field
      * @return int
      * @throws Exception
      */
-    public function delete(ItemModel|string|int|float|null|array $value = null, ?string $field = null): int
+    public function delete(AbstractModel|string|int|float|null|array $value = null, ?string $field = null): int
     {
         $params = func_get_args();
         if (!$field) {
             $this->prepareModel();
             $field = $this->idField;
         }
-        if ($value instanceof ItemModel) {
+        if ($value instanceof AbstractModel) {
             $value = $value->get($field) ? $value->get($field) : throw new Exception("The value {$field} is not set");
         }
 
@@ -290,5 +291,32 @@ abstract class Model
         $executed = $pdoStatement->execute($select->getParams());
         $this->select = null;
         return $pdoStatement->rowCount();
+    }
+
+    private array $joinModels = [];
+
+    public function join(ResourceModel $resourceModel, array $fields, AbstractModel $model): static
+    {
+        $leftKey = array_keys($fields)[0];
+        $rightKey = $fields[$leftKey];
+        $this->getSelect()->innerJoin(
+            $resourceModel->getTable(), "main.{$leftKey} = {$resourceModel->getTable()}.{$rightKey}"
+        );
+
+        if (is_null($this->columns)) {
+            $this->getDescription();
+            $this->columns = [];
+            foreach ($this->getDescription() as $field) {
+                $this->columns[] = ['main.' . $field['Field'] => 'main.' . $field['Field']];
+            }
+        }
+
+        foreach ($this->getDescription() as $field) {
+            $this->columns[] = [$this->getTable() . '.' . $field['Field'] => $this->getTable() . '.' . $field['Field']];
+        }
+
+        $this->joinModels[$resourceModel->getTable()] = $model;
+
+        return $this;
     }
 }

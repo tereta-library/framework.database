@@ -10,6 +10,8 @@ use Framework\Database\Abstract\Model as AbstractModel;
 use Framework\Database\Abstract\Resource\Model as AbstractResourceModel;
 use Framework\Database\Abstract\Resource\Collection as AbstractResourceCollection;
 use Framework\Database\Abstract\Repository as AbstractRepository;
+use Framework\Pattern\Traits\Cache as CacheTrait;
+use Framework\Pattern\Traits\Singleton as SingletonTrait;
 
 /**
  * @class Framework\Database\Cli\Make
@@ -41,7 +43,7 @@ class Make implements Controller
         $fullClassName = ltrim($modelName, '/');
         $fullClassName = ltrim($fullClassName, '\\');
         $fullClassName = str_replace('\\', '/', $fullClassName);
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+$/', $fullClassName)) {
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[A-Za-z]+)+$/', $fullClassName)) {
             throw new Exception('Invalid model name, should be in the format of "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"');
         }
 
@@ -93,7 +95,7 @@ class Make implements Controller
         $fullClassName = ltrim($resourceModelName, '/');
         $fullClassName = ltrim($fullClassName, '\\');
         $fullClassName = str_replace('\\', '/', $fullClassName);
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model\/Resource(\/[A-Z]{1}[a-z]+)+$/', $fullClassName)) {
+        if (!preg_match('/^([A-Z]{1}[A-Za-z]+)\/([A-Z]{1}[A-Za-z]+)\/Model\/Resource(\/[A-Z]{1}[A-Za-z]+)+$/', $fullClassName)) {
             throw new Exception('Invalid model name, should be in the format of "Vendor/Module/Model/Resource/Name" or "Vendor/Module/Model/Resource/Space/Name"');
         }
 
@@ -159,7 +161,7 @@ class Make implements Controller
         $fullCollectionName = ltrim($collectionName, '/');
         $fullCollectionName = ltrim($fullCollectionName, '\\');
         $fullCollectionName = str_replace('\\', '/', $fullCollectionName);
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model\/Resource(\/[A-Z]{1}[a-z]+)+\/Collection$/', $fullCollectionName)) {
+        if (!preg_match('/^([A-Z]{1}[A-Za-z]+)\/([A-Z]{1}[A-Za-z]+)\/Model\/Resource(\/[A-Z]{1}[A-Za-z]+)+\/Collection$/', $fullCollectionName)) {
             throw new Exception('Invalid collection name, should be in the format of "Vendor/Module/Model/Resource/Name/Collection" or "Vendor/Module/Model/Resource/Space/Name/Collection"');
         }
 
@@ -203,7 +205,7 @@ class Make implements Controller
         $fullModelName = ltrim($modelName, '/');
         $fullModelName = ltrim($fullModelName, '\\');
         $fullModelName = str_replace('\\', '/', $fullModelName);
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+$/', $fullModelName)) {
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[A-Za-z]+)+$/', $fullModelName)) {
             throw new Exception('Invalid model name, should be in the format of "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"');
         }
         $fullModelName = str_replace('/', '\\', $fullModelName);
@@ -211,7 +213,7 @@ class Make implements Controller
         $fullResourceModelName = ltrim($resourceModelName, '/');
         $fullResourceModelName = ltrim($fullResourceModelName, '\\');
         $fullResourceModelName = str_replace('\\', '/', $fullResourceModelName);
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+$/', $fullResourceModelName)) {
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[A-Za-z]+)+$/', $fullResourceModelName)) {
             throw new Exception('Invalid resource model name, should be in the format of "Vendor/Module/Model/Resource/Name" or "Vendor/Module/Model/Resource/Space/Name"');
         }
         $fullResourceModelName = str_replace('/', '\\', $fullResourceModelName);
@@ -258,7 +260,7 @@ class Make implements Controller
         $fullModelName = ltrim($modelName, '/');
         $fullModelName = ltrim($fullModelName, '\\');
         $fullModelName = str_replace('\\', '/', $fullModelName);
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[a-z]+)+$/', $fullModelName)) {
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[a-z]+)\/Model(\/[A-Z]{1}[A-Za-z]+)+$/', $fullModelName)) {
             throw new Exception('Invalid model name, should be in the format of "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"');
         }
 
@@ -269,24 +271,59 @@ class Make implements Controller
 
         $resourceModel = "{$moduleName}/Model/Resource/{$modelName}";
         $resourceCollection = "{$moduleName}/Model/Resource/{$modelName}/Collection";
+        $repository = "{$moduleName}/Model/{$modelName}Repository";
 
         $this->make($fullModelName);
         $this->makeResource($resourceModel, $tableName);
         $this->makeCollection($resourceCollection, $fullModelName, $resourceModel);
+        $this->makeRepository($repository, $fullModelName, $resourceModel, $resourceCollection);
     }
 
     /**
      * @cli make:model:repository
-     * @cliDescription Make repository for model, resource model and collection: sample "php cli.php make:model:repository Vendor/Module/Model/Name/Repository
+     * @cliDescription Make repository for model, resource model and collection: sample "php cli.php make:model:repository Vendor/Module/Model/NameRepository Vendor/Module/Model/Name Vendor/Module/Model/Resource/Name Vendor/Module/Model/Resource/Name/Collection"
      * @param string $modelName
      * @return void
      */
-    public function makeRepository(string $repositoryName): void
+    public function makeRepository(
+        string $repositoryName, string $modelName, string $resourceName, string $collectionName = ''
+    ): void
     {
+        // Model
+        $modelName = str_replace(
+            '\\', '/',
+            ltrim(ltrim($modelName, '/'), '\\')
+        );
+        $modelName = str_replace('/', '\\', $modelName);
+        if (!class_exists($modelName)) {
+            throw new Exception("The {$modelName} model does not exist");
+        }
+
+        // Resource Model
+        $resourceName = str_replace(
+            '\\', '/',
+            ltrim(ltrim($resourceName, '/'), '\\')
+        );
+        $resourceName = str_replace('/', '\\', $resourceName);
+        if (!class_exists($resourceName)) {
+            throw new Exception("The {$resourceName} resource model does not exist");
+        }
+
+        // Collection
+        $collectionName = str_replace(
+            '\\', '/',
+            ltrim(ltrim($collectionName, '/'), '\\')
+        );
+        $collectionName = str_replace('/', '\\', $collectionName);
+        if ($collectionName && !class_exists($collectionName)) {
+            throw new Exception("The {$collectionName} collection does not exist");
+        }
+
+        // Repository
         $dateTime = date('Y-m-d H:i:s');
         $repositoryName = ltrim($repositoryName, '/');
-        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[A-Za-z]+)\/Model(\/[A-Z]{1}[a-zA-Z]+)+\/Repository$/', $repositoryName)) {
-            throw new Exception('Invalid collection name, should be in the format of "Vendor/Module/Model/Name/Repository" or "Vendor/Module/Model/Resource/Space/Name/Repository"');
+        if (!preg_match('/^([A-Z]{1}[a-z]+)\/([A-Z]{1}[A-Za-z]+)\/Model(\/[A-Z]{1}[a-zA-Z]+)+Repository$/', $repositoryName)) {
+            throw new Exception('Invalid collection name, should be in the format of "Vendor/Module/Model/NameRepository" or "Vendor/Module/Model/Resource/Space/NameRepository"');
         }
 
         $repositoryName = str_replace('/', '\\', $repositoryName);
@@ -307,9 +344,13 @@ class Make implements Controller
 
         $content = "<?php declare(strict_types=1);\n\n" .
             "namespace {$namespace};\n\n" .
-            "use " . AbstractRepository::class . " as AbstractRepository;\n" .
-            "use " . AbstractModel::class . " as AbstractModel;\n" .
-            "use Exception;\n\n" .
+            "use Framework\\Database\\Abstract\\Model as AbstractModel;\n" .
+            "use Framework\\Database\\Abstract\\Repository as AbstractRepository;" .
+            "use {$modelName} as Model;\n" .
+            "use {$resourceName} as ResourceModel;\n" .
+            "use Exception;\n" .
+            ($collectionName ? "use " . $collectionName . " as Collection;\n" : '') .
+            "\n" .
             "/**\n" .
             " * Generated by www.Tereta.dev on {$dateTime}\n" .
             " *\n" .
@@ -318,45 +359,35 @@ class Make implements Controller
             " */\n" .
             "class {$className} extends AbstractRepository \n{\n" .
             "    /**\n" .
-            "     * @todo Change the keys to match your logic\n" .
-            "     * @var array \$registeredKeys The keys declaration used to register a model on the setRegisterModel method.\n" .
-            "     */" .
-            "    \n" .
-            "    protected array \$registeredKeys = ['id', ['siteId', 'identifier']];\n" .
-            "    \n" .
-            "    /**\n" .
-            "     * @todo Change the id to match your logic\n" .
-            "     * @var string \$registeredId The id declaration used to register a model ID field on the setRegisterModel method.\n" .
+            "     * Configure mode, resourceModel, collection\n" .
             "     */\n" .
-            "    protected string \$registeredId = 'id';\n" .
-            "    \n" .
-            "    /**\n" .
-            "     * @todo This is mockup for future constructor with declared classes.\n" .
-            "     */\n" .
-            "    public function __construct()\n" .
+            "    protected function __construct()\n" .
             "    {\n" .
-            "        // @todo Construct all model, resource model and collections here.\n" .
+            "        \$this->model = new Model;\n" .
+            "        \$this->resourceModel = new ResourceModel;\n" .
+            ($collectionName ? "        \$this->collection = new Collection;\n" : '') .
             "    }\n" .
             "    \n" .
             "    /**\n" .
-            "     * This is mockup of the loadById sample method. You can use your own methods to load the model from the database.\n" .
-            "     * \n" .
-            "     * @todo Use own method, implement a method to load a model from the database\n" .
             "     * @param int \$id\n" .
             "     * @return AbstractModel\n" .
             "     * @throws Exception\n" .
             "     */\n" .
             "    public function getById(int \$id): AbstractModel\n" .
             "    {\n" .
-            "        if (\$model = \$this->getRegisterModel(['id' => \$id])) {\n" .
-            "            return \$model;\n" .
+            "        if (\$cached = \$this->getCache(\$id)) {\n" .
+            "            return \$cached;\n" .
             "        }\n" .
             "        \n" .
-            "        // @todo Loading the model from the database logic\n" .
+            "        \$this->resourceModel->load(\$model = new (\$this->model::class), ['id' => \$id]);\n" .
             "        \n" .
-            "        return \$this->setRegisterModel(\$model);\n" .
+            "        if (!\$model->get('id')) {\n" .
+            "            throw new Exception('Model not found');\n" .
+            "        }\n" .
+            "        \n" .
+            "        return \$this->setCache(\$model, \$id);\n" .
             "    }\n" .
-            "}\n";
+            "}";
 
         if (!file_put_contents($repositoryFile, $content)) {
             throw new Exception("The {$repositoryFile} file could not be created");
