@@ -31,7 +31,7 @@ class Make implements Controller
 
     /**
      * @cli make:model
-     * @cliDescription Make model: sample "php cli make:model Vendor/Module/Model/Name"
+     * @cliDescription Make model: sample "php cli.php make:model Vendor/Module/Model/Name"
      * @param string $modelName Full class name like "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"
      * @return void
      * @throws Exception
@@ -82,7 +82,7 @@ class Make implements Controller
 
     /**
      * @cli make:model:resource
-     * @cliDescription Make model: samlpe "php cli make:model:resource Vendor/Module/Model/Resource/Name"
+     * @cliDescription Make model: samlpe "php cli.php make:model:resource Vendor/Module/Model/Resource/Name tableName"
      * @param string $resourceModelName Full class name like "Vendor/Module/Model/Resource/Name" or "Vendor/Module/Model/Resource/Space/Name"
      * @param string $tableName The table name in the database
      * @return void
@@ -147,7 +147,7 @@ class Make implements Controller
 
     /**
      * @cli make:model:collection
-     * @cliDescription Make model: samlpe "php cli make:model:collection Vendor/Module/Model/Resource/Name/Collection"
+     * @cliDescription Make model: samlpe "php cli.php make:model:collection Vendor/Module/Model/Resource/Name/Collection"
      * @param string $collectionName Full class name like "Vendor/Module/Model/Resource/Name/Collection" or "Vendor/Module/Model/Resource/Space/Name/Collection"
      * @param string|null $modelName Full class name like "Vendor/Module/Model/Resource/Name/Collection" or "Vendor/Module/Model/Resource/Space/Name/Collection"
      * @param string|null $resourceModelName Full class name like "Vendor/Module/Model/Resource/Name/Collection" or "Vendor/Module/Model/Resource/Space/Name/Collection"
@@ -247,7 +247,7 @@ class Make implements Controller
 
     /**
      * @cli make:model:bundle
-     * @cliDescription Make bundle for model, resource model and collection: sample "php cli make:model:bundle Vendor/Module/Model/Name tableName"
+     * @cliDescription Make bundle for model, resource model and collection: sample "php cli.php make:model:bundle Vendor/Module/Model/Name tableName"
      * @param string $modelName Full class name like "Vendor/Module/Model/Name" or "Vendor/Module/Model/Space/Name"
      * @param string $tableName The table name in the database
      * @return void
@@ -277,7 +277,7 @@ class Make implements Controller
 
     /**
      * @cli make:model:repository
-     * @cliDescription Make repository for model, resource model and collection: sample "php cli make:model:repository Vendor/Module/Model/Name/Repository
+     * @cliDescription Make repository for model, resource model and collection: sample "php cli.php make:model:repository Vendor/Module/Model/Name/Repository
      * @param string $modelName
      * @return void
      */
