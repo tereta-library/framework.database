@@ -27,23 +27,32 @@ use InvalidArgumentException;
  */
 class Builder
 {
+    const int TYPE_BOOLEAN = 1;
 
-    const float TYPE_BIGINT = (9223372036854776000 - 1);
-    const int TYPE_INT = 2147483647;
-    const int TYPE_MEDIUMINT = 8388607;
-    const int TYPE_SMALLINT = 32767;
-    const int TYPE_TINYINT = 127;
+    const int TYPE_TINYINT = 2;
+    const int TYPE_SMALLINT = 3;
+    const int TYPE_MEDIUMINT = 4;
+    const int TYPE_INT = 5;
+    const int TYPE_BIGINT = 6;
 
-    const float TYPE_BIGINT_UNSIGNED = (18446744073709552000 - 1);
-    const int TYPE_INT_UNSIGNED = 4294967295;
-    const int TYPE_MEDIUMINT_UNSIGNED = 16777215;
-    const int TYPE_SMALLINT_UNSIGNED = 65535;
-    const int TYPE_TINYINT_UNSIGNED = 255;
+    const int TYPE_TINYINT_UNSIGNED = 7;
+    const int TYPE_BIGINT_UNSIGNED = 8;
+    const int TYPE_INT_UNSIGNED = 9;
+    const int TYPE_MEDIUMINT_UNSIGNED = 10;
+    const int TYPE_SMALLINT_UNSIGNED = 11;
 
-    const int TYPE_LONGTEXT = 4294967295;
-    const int TYPE_MEDIUMTEXT = 16777215;
-    const int TYPE_TEXT = 65535;
-    const int TYPE_VARCHAR = 255;
+    const int TYPE_CHAR = 12;
+    const int TYPE_VARCHAR = 13;
+
+    const int TYPE_TINYTEXT = 14;
+    const int TYPE_TEXT = 15;
+    const int TYPE_MEDIUMTEXT = 16;
+    const int TYPE_LONGTEXT = 17;
+
+    const array TYPE_DEFAULT_LENGTHS = [
+        self::TYPE_VARCHAR => 255,
+        self::TYPE_CHAR => 16
+    ];
 
     /**
      * @var array $columns
@@ -94,43 +103,41 @@ class Builder
         return $this->table;
     }
 
-    public function addVarChar(string $columnName, int $length = 255): ColumnBuilder
-    {
-        if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
-            throw new InvalidArgumentException("Column name '{$columnName}' is invalid");
-        }
-
-        $column = new ColumnBuilder($columnName, "varchar({$length})", ColumnBuilder::TYPE_TEXT);
-        $this->columns[] = $column;
-        return $column;
-    }
-
     /**
      * @param string $columnName
-     * @param int $length
+     * @param int $type
+     * @param int|null $length
      * @return ColumnBuilder
      */
-    public function addString(string $columnName, int $length = 255): ColumnBuilder
+    public function addString(string $columnName, int $type = self::TYPE_VARCHAR, ?int $length = null): ColumnBuilder
     {
         if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
             throw new InvalidArgumentException("Column name '{$columnName}' is invalid");
         }
 
         switch(true) {
-            case($length <= self::TYPE_VARCHAR):
+            case($type == self::TYPE_CHAR):
+                $columnLength = $length ?? self::TYPE_DEFAULT_LENGTHS[self::TYPE_VARCHAR];
+                $columnType = "char({$length})";
+                break;
+            case($type == self::TYPE_VARCHAR):
+                $columnLength = $length ?? self::TYPE_DEFAULT_LENGTHS[self::TYPE_VARCHAR];
                 $columnType = "varchar({$length})";
                 break;
-            case($length <= self::TYPE_TEXT):
+            case($type == self::TYPE_TINYTEXT):
+                $columnType = "tinytext";
+                break;
+            case($type == self::TYPE_TEXT):
                 $columnType = "text";
                 break;
-            case($length <= self::TYPE_MEDIUMTEXT):
+            case($type == self::TYPE_MEDIUMTEXT):
                 $columnType = "mediumtext";
                 break;
-            case($length <= self::TYPE_LONGTEXT):
+            case($type == self::TYPE_LONGTEXT):
                 $columnType = "longtext";
                 break;
             default:
-                throw new Exception("Invalid length {$length} of string type");
+                throw new Exception("Invalid string type");
                 break;
         }
 
@@ -177,48 +184,63 @@ class Builder
      * @param bool $signed
      * @return ColumnBuilder
      */
-    public function addInteger(string $columnName, int $length = self::TYPE_INT_UNSIGNED, bool $signed = false): ColumnBuilder
+    public function addInteger(string $columnName, int $type = self::TYPE_INT_UNSIGNED, bool $signed = true): ColumnBuilder
     {
         if (preg_match('/[^a-zA-Z0-9_]/', $columnName)) {
             throw new InvalidArgumentException("Column name \"{$columnName}\" is invalid");
         }
 
         switch(true) {
-            case($signed == true && $length <= static::TYPE_TINYINT):
-                $columnType = 'tinyint';
+            case($type == static::TYPE_BOOLEAN):
+                $columnType = 'boolean';
                 break;
-            case($signed == true && $length <= static::TYPE_SMALLINT):
-                $columnType = 'smallint';
-                break;
-            case($signed == true && $length <= static::TYPE_MEDIUMINT):
-                $columnType = 'mediumint';
-                break;
-            case($signed == true && $length <= static::TYPE_INT):
-                $columnType = 'int';
-                break;
-            case($signed == true && $length <= static::TYPE_BIGINT):
-                $columnType = 'bigint';
-                break;
-            case($signed == true):
-                throw new Exception("Invalid length {$length} of numeric type");
-                break;
-            case($length <= static::TYPE_TINYINT_UNSIGNED):
+            case($signed === false && $type == static::TYPE_TINYINT):
                 $columnType = 'tinyint unsigned';
                 break;
-            case($length <= static::TYPE_SMALLINT_UNSIGNED):
+            case($signed === false && $type <= static::TYPE_SMALLINT):
                 $columnType = 'smallint unsigned';
                 break;
-            case($length <= static::TYPE_MEDIUMINT_UNSIGNED):
+            case($signed === false && $type <= static::TYPE_MEDIUMINT):
                 $columnType = 'mediumint unsigned';
                 break;
-            case($length <= static::TYPE_INT_UNSIGNED):
+            case($signed === false && $type <= static::TYPE_INT):
                 $columnType = 'int unsigned';
                 break;
-            case($length <= static::TYPE_BIGINT_UNSIGNED):
+            case($signed === false && $type <= static::TYPE_BIGINT):
+                $columnType = 'bigint unsigned';
+                break;
+            case($type == static::TYPE_TINYINT):
+                $columnType = 'tinyint';
+                break;
+            case($type == static::TYPE_SMALLINT):
+                $columnType = 'smallint';
+                break;
+            case($type == static::TYPE_MEDIUMINT):
+                $columnType = 'mediumint';
+                break;
+            case($type == static::TYPE_INT):
+                $columnType = 'int';
+                break;
+            case($type == static::TYPE_BIGINT):
+                $columnType = 'bigint';
+                break;
+            case($type == static::TYPE_TINYINT_UNSIGNED):
+                $columnType = 'tinyint unsigned';
+                break;
+            case($type == static::TYPE_SMALLINT_UNSIGNED):
+                $columnType = 'smallint unsigned';
+                break;
+            case($type == static::TYPE_MEDIUMINT_UNSIGNED):
+                $columnType = 'mediumint unsigned';
+                break;
+            case($type == static::TYPE_INT_UNSIGNED):
+                $columnType = 'int unsigned';
+                break;
+            case($type == static::TYPE_BIGINT_UNSIGNED):
                 $columnType = 'bigint unsigned';
                 break;
             default:
-                throw new Exception("Invalid length {$length} of numeric type");
+                throw new Exception("Invalid numeric type");
                 break;
         }
 
