@@ -145,6 +145,11 @@ abstract class Model
         }
 
         foreach ($valueSearch as $key => $val) {
+            if (is_null($valueSearch[$key])) {
+                $select->where($key . ' IS NULL');
+                continue;
+            }
+
             $select->where($key . ' = ?', $val);
         }
 
