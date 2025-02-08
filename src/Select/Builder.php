@@ -76,6 +76,11 @@ class Builder
     private array $join = [];
 
     /**
+     * @var string $group
+     */
+    private string $group = '';
+
+    /**
      * @param array $columns
      */
     public function __construct(array $columns = ['*'])
@@ -282,6 +287,17 @@ class Builder
     }
 
     /**
+     * @param string ...$field
+     * @return $this
+     */
+    public function group(string ...$field): static
+    {
+        $insert = implode(", ", $field);
+        $this->group = " GROUP BY {$insert}";
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function build(): string
@@ -314,6 +330,7 @@ class Builder
         }
 
         $sql .= $this->buildWhere();
+        $sql .= $this->group;
         $sql .= $this->order;
         $sql .= $this->limit;
 

@@ -159,13 +159,56 @@ abstract class Collection implements Iterator
     }
 
     /**
+     * @param ...$columns
+     * @return $this
+     */
+    public function columns(...$columns): static
+    {
+        $this->columns = $columns;
+        // $this->getSelect()->columns(...$columns); // @deprecated
+        return $this;
+    }
+
+    /**
+     * @param string $column
+     * @return $this
+     */
+    public function group(string $column): static
+    {
+        $this->getSelect()->group($column);
+        return $this;
+    }
+
+    /**
+     * @param string $column
+     * @return $this
+     * @throws Exception
+     */
+    public function order(string $column): static
+    {
+        $this->getSelect()->order($column);
+        return $this;
+    }
+
+    /**
+     * @param int $limit
+     * @return $this
+     */
+    public function limit(int $limit): static
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    /**
+     * @deprecated Use limit method instead
      * @param int $limit
      * @return $this
      */
     public function setLimit(int $limit): static
     {
-        $this->limit = $limit;
-        return $this;
+        xdebug_break();
+        return $this->limit($limit);
     }
 
     /**
@@ -192,16 +235,6 @@ abstract class Collection implements Iterator
     }
 
     /**
-     * @param ...$columns
-     * @return $this
-     */
-    public function columns(...$columns): static
-    {
-        $this->getSelect()->columns(...$columns);
-        return $this;
-    }
-
-    /**
      * @param ResourceModel $resourceModel
      * @param array $fields
      * @return $this
@@ -210,8 +243,14 @@ abstract class Collection implements Iterator
     {
         $leftKey = array_keys($fields)[0];
         $rightKey = $fields[$leftKey];
+        if (str_contains($leftKey, '.')) {
+            $leftKey = explode('.', $leftKey);
+        } else {
+            $leftKey = ['main', $leftKey];
+        }
+
         $this->getSelect()->innerJoin(
-            $resourceModel->getTable(), "main.{$leftKey} = {$resourceModel->getTable()}.{$rightKey}"
+            $resourceModel->getTable(), "{$leftKey[0]}.{$leftKey[1]} = {$resourceModel->getTable()}.{$rightKey}"
         );
 
         if (is_null($this->columns)) {
