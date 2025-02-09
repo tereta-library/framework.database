@@ -139,12 +139,14 @@ abstract class Collection implements Iterator
             return $this;
         }
 
+        $condition = "";
         foreach (is_array($value) ? $value : [] as $itemValue) {
-            $this->getSelect()->whereOr("{$column} = ?", $itemValue);
+            $condition .= ($condition ? ", " : "") . "?";
         }
+        $condition = "{$column} IN (" . $condition . ")";
+        $this->getSelect()->where($condition, ...$value);
 
         return $this;
-
     }
 
     /**
@@ -229,7 +231,11 @@ abstract class Collection implements Iterator
         $query->columns(new ValueQuery('COUNT(*) as count'));
         $pdoState = $this->connection->prepare($query->build());
         $pdoState->execute($query->getParams());
-        $count = $pdoState->fetchColumn();
+        $count = 0;
+
+        while($countItem = $pdoState->fetchColumn()) {
+            $count = $count + $countItem;
+        }
         return $count;
     }
 

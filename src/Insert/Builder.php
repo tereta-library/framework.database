@@ -107,14 +107,14 @@ class Builder
             }
             $values[] = implode(", ", $preparedItem);
         }
-        $query = "INSERT INTO {$this->table} (" . implode(", ", $this->fields) . ") VALUES (" . implode('), (', $values) . ")";
+        $query = "INSERT INTO {$this->table} (`" . implode("`, `", $this->fields) . "`) VALUES (" . implode('), (', $values) . ")";
 
         if ($this->onDuplicate && $this->fields) {
             $updateArray = [];
 
             foreach ($this->fields as $field) {
                 if (in_array($field, $this->onDuplicate)) continue;
-                $updateArray[] = "{$field} = VALUES({$field})";
+                $updateArray[] = "`{$field}` = VALUES(`{$field}`)";
             }
 
             if ($updateArray) {
