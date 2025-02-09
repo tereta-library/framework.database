@@ -206,12 +206,9 @@ class Builder
      * @param ...$variables
      * @return $this
      */
-    public function whereCondition(int $operator, string $condition, ...$variables): static
+    public function whereCondition(int $operator, string $condition, int|string|float...$variables): static
     {
         foreach ($variables as $key => $variable) {
-            if (is_array($variable)) {
-                throw new Exception('Parameter $variable must not be an array');
-            }
             $field = $this->valueCounter ? ":field{$this->valueCounter}" : ":field";
             $this->valueCounter++;
             $this->params[$field] = $variable;
@@ -220,7 +217,6 @@ class Builder
             }
             $strPos = strpos($condition, '?');
             $condition = substr_replace($condition, $field, $strPos, 1);
-            $e=0;
         }
 
         $operatorString = 'AND';

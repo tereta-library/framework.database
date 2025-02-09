@@ -140,7 +140,7 @@ abstract class Collection implements Iterator
         }
 
         foreach (is_array($value) ? $value : [] as $itemValue) {
-            $this->getSelect()->where("{$column} = ?", $itemValue);
+            $this->getSelect()->whereOr("{$column} = ?", $itemValue);
         }
 
         return $this;
@@ -165,7 +165,6 @@ abstract class Collection implements Iterator
     public function columns(...$columns): static
     {
         $this->columns = $columns;
-        // $this->getSelect()->columns(...$columns); // @deprecated
         return $this;
     }
 

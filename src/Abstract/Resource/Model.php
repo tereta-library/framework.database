@@ -206,7 +206,7 @@ abstract class Model
      * @return $this
      * @throws Exception
      */
-    public function save(AbstractModel $model, string $idField = null): static
+    public function save(AbstractModel $model, ?string $idField = null): static
     {
         $this->prepareModel();
 
