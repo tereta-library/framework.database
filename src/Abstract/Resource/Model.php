@@ -158,6 +158,7 @@ abstract class Model
         try {
             $pdoStatement->execute($select->getParams());
         } catch (Exception $e) {
+            xdebug_break();
             throw $e;
         }
 
